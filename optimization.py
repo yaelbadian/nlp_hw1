@@ -1,3 +1,52 @@
 import numpy as np
+from scipy.sparse import csr_matrix
 import scipy
-import collections
+from scipy.optimize import fmin_l_bfgs_b
+
+
+class Optimization:
+    def __init__(self, mat, list_of_mats, lamda):
+        self.mat = mat
+        self.list_of_mats = list_of_mats
+        self.lamda = lamda
+
+    def calculate_linear_term(self, v):
+        return self.mat.dot(v)
+
+    def calculate_exps(self, v):
+        exps = []
+        for mat in self.list_of_mats:
+            exps.append(np.exp(mat.dot(v)))
+        return exps
+
+    def calculate_sum_exps(self, exps):
+        sum_of_exps = csr_matrix(np.zeros(self.mat.shape[0]))
+        for exp in exps:
+            sum_of_exps += exp
+        return sum_of_exps
+
+    @staticmethod
+    def calculate_normalization_term(sum_of_exps):
+        return np.log(sum_of_exps).sum()
+
+    def calculate_regularization_term(self, v):
+        return -0.5 * self.lamda * (v**2).sum()
+
+    def calculate_empirical_counts(self):
+        return self.mat.sum(axis=0)
+
+    def calculate_expected_counts(self, exps, sum_of_exps):  ################## deal with divide by zero ##################
+        sum_of_mats = np.zeros(self.mat.shape)
+        for mat, exp in zip(self.list_of_mats, exps):
+            sum_of_mats += mat * exp
+        return (sum_of_mats * (1 / sum_of_exps)).sum(axis=0)
+
+    def calculate_regularization_grad(self, v):
+        return self.lamda * v
+
+    def calc_objective_per_iter(self, v):
+        exps = self.calculate_exps(v)
+        sum_of_exps = self.calculate_sum_exps(exps)
+        likelihood = self.calculate_linear_term(v) - self.calculate_normalization_term(sum_of_exps) - self.calculate_normalization_term(sum_of_exps)
+        grad = self.calculate_empirical_counts() - self.calculate_expected_counts(exps, sum_of_exps) - self.calculate_regularization_grad(v)
+        return (-1) * likelihood, (-1) * grad

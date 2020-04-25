@@ -1,13 +1,15 @@
-import numpy as np
-import scipy
 from collections import OrderedDict
+from scipy.sparse import csr_matrix
+import pickle
 
 
 class feature_statistics_class():
 
-    def __init__(self):
+    def __init__(self, file_path):
         self.n_total_features = 0  # Total number of features accumulated
+        self.n_total_histories = 0
         self.pucts = ['!', '@', '#', '.', ':', ',', '$', '&', '%', '$', '~', "'", '+', '=', '*', '^', '>', '<', ';', '``']
+        self.list_of_lines_histories = self.create_list_of_lines_histories(file_path)
 
         # Init all features dictionaries
         self.word_ctag_count = OrderedDict()  # feature 100
@@ -25,6 +27,7 @@ class feature_statistics_class():
         self.punctuation_count = OrderedDict()  # (1) punc (2) have uppers (3) have lowers (4) have numbers
         self.num_of_uppers_count = OrderedDict()  # numbers of uppers
 
+        self.create_all_dicts()
 
     @staticmethod
     def map_char(c):
@@ -56,55 +59,123 @@ class feature_statistics_class():
         else:
             dict[key] = 1
 
-    def fill_word_ctag_count(self, word, ctag):
+    def fill_word_ctag_count(self, word, ctag, fill=True):
         key = (word, ctag)
-        self.add_key_to_dict(key, self.word_ctag_count)
+        if fill:
+            self.add_key_to_dict(key, self.word_ctag_count)
+        else:
+            if key in self.word_ctag:
+                return [self.word_ctag[key]]
+            else:
+                return []
 
-    def fill_suffix_count(self, word, ctag):
+    def fill_suffix_count(self, word, ctag, fill=True):
+        features = []
         n = len(word)
         for i in range(1, 4):
             if n >= i + 2:
                 key = (word[-i:], ctag)
-                self.add_key_to_dict(key, self.suffix_count)
+                if fill:
+                    self.add_key_to_dict(key, self.suffix_count)
+                else:
+                    if key in self.suffix:
+                        features.append(self.suffix[key])
+        if not fill:
+            return features
+        else:
+            return []
 
-    def fill_prefix_count(self, word, ctag):
+    def fill_prefix_count(self, word, ctag, fill=True):
+        features = []
         n = len(word)
         for i in range(1, 4):
             if n >= i + 2:
                 key = (word[:i], ctag)
-                self.add_key_to_dict(key, self.prefix_count)
+                if fill:
+                    self.add_key_to_dict(key, self.prefix_count)
+                else:
+                    if key in self.prefix:
+                        features.append(self.prefix[key])
+        if not fill:
+            return features
+        else:
+            return []
 
-    def fill_pptag_ptag_ctag_count(self, pptag, ptag, ctag):
+    def fill_pptag_ptag_ctag_count(self, pptag, ptag, ctag, fill=True):
         key = (pptag, ptag, ctag)
-        self.add_key_to_dict(key, self.pptag_ptag_ctag_count)
+        if fill:
+            self.add_key_to_dict(key, self.pptag_ptag_ctag_count)
+        else:
+            if key in self.pptag_ptag_ctag:
+                return [self.pptag_ptag_ctag[key]]
+            else:
+                return []
 
-    def fill_ptag_ctag_count(self, ptag, ctag):
+    def fill_ptag_ctag_count(self, ptag, ctag, fill=True):
         key = (ptag, ctag)
-        self.add_key_to_dict(key, self.ptag_ctag_count)
+        if fill:
+            self.add_key_to_dict(key, self.ptag_ctag_count)
+        else:
+            if key in self.ptag_ctag:
+                return [self.ptag_ctag[key]]
+            else:
+                return []
 
-    def fill_ctag_count(self, ctag):
+    def fill_ctag_count(self, ctag, fill=True):
         key = (ctag)
-        self.add_key_to_dict(key, self.ctag_count)
+        if fill:
+            self.add_key_to_dict(key, self.ctag_count)
+        else:
+            if key in self.ctag:
+                return [self.ctag[key]]
+            else:
+                return []
 
-    def fill_pword_ctag_count(self, pword, ctag):
+    def fill_pword_ctag_count(self, pword, ctag, fill=True):
         key = (pword, ctag)
-        self.add_key_to_dict(key, self.pword_ctag_count)
+        if fill:
+            self.add_key_to_dict(key, self.pword_ctag_count)
+        else:
+            if key in self.pword_ctag:
+                return [self.pword_ctag[key]]
+            else:
+                return []
 
-    def fill_nword_ctag_count(self, nword, ctag):
+    def fill_nword_ctag_count(self, nword, ctag, fill=True):
         key = (nword, ctag)
-        self.add_key_to_dict(key, self.nword_ctag_count)
+        if fill:
+            self.add_key_to_dict(key, self.nword_ctag_count)
+        else:
+            if key in self.nword_ctag:
+                return [self.nword_ctag[key]]
+            else:
+                return []
 
-    def fill_len_word_count(self, word, ctag):
+    def fill_len_word_count(self, word, ctag, fill=True):
         key = (len(word), ctag)
-        self.add_key_to_dict(key, self.len_word_count)
+        if fill:
+            self.add_key_to_dict(key, self.len_word_count)
+        else:
+            if key in self.len_word:
+                return [self.len_word[key]]
+            else:
+                return []
 
-    def fill_upper_lower_number_count(self, word, ctag):
+    def fill_upper_lower_number_count(self, word, ctag, fill=True):
         c = word[0]
         has_upper, has_lower, has_number = feature_statistics_class.map_word(word[1:])
         key = (feature_statistics_class.map_char(c), has_upper, has_lower, has_number, ctag)
-        self.add_key_to_dict(key, self.upper_lower_number_count)
+        if fill:
+            self.add_key_to_dict(key, self.upper_lower_number_count)
+        else:
+            if key in self.upper_lower_number:
+                return [self.upper_lower_number[key]]
+            else:
+                return []
+        return []
 
-    def fill_punctuation_starts_count(self, word, ctag):
+    def fill_punctuation_starts_count(self, word, ctag, fill=True):
+        key = None
         word = word.replace('.', '')
         for c in word:
             if feature_statistics_class.map_char(c) == 3:
@@ -114,25 +185,42 @@ class feature_statistics_class():
                 else:
                     mapped = 3
                 key = (c, feature_statistics_class.map_char(word[0]), mapped, ctag)
-                self.add_key_to_dict(key, self.punctuation_starts_count)
-                return
+        if fill:
+            self.add_key_to_dict(key, self.punctuation_starts_count)
+            return
+        if key in self.punctuation_starts:
+            return [self.punctuation_starts[key]]
+        else:
+            return []
 
-    def fill_punctuation_count(self, word, ctag):
+    def fill_punctuation_count(self, word, ctag, fill=True):
+        key = None
         word = word.replace('.', '')
         for c in word:
             if feature_statistics_class.map_char(c) == 3:
                 has_upper, has_lower, has_number = feature_statistics_class.map_word(word)
                 key = (c, has_upper, has_lower, has_number, ctag)
-                self.add_key_to_dict(key, self.punctuation_count)
-                return
+        if fill:
+            self.add_key_to_dict(key, self.punctuation_count)
+            return
+        if key in self.punctuation:
+            return [self.punctuation[key]]
+        else:
+            return []
 
-    def fill_num_of_uppers_count(self, word, ctag):
+    def fill_num_of_uppers_count(self, word, ctag, fill=True):
         n = 0
         for c in word:
             if feature_statistics_class.map_char(c) == 0:
                 n += 1
         key = (n, ctag)
-        self.add_key_to_dict(key, self.num_of_uppers_count)
+        if fill:
+            self.add_key_to_dict(key, self.num_of_uppers_count)
+        else:
+            if key in self.num_of_uppers:
+                return [self.num_of_uppers[key]]
+            else:
+                return []
 
     def fill_all_dicts(self, history):
         word, pptag, ptag, ctag, nword, pword = history
@@ -151,6 +239,29 @@ class feature_statistics_class():
             self.fill_punctuation_count(word, ctag)
             self.fill_num_of_uppers_count(word, ctag)
 
+    def create_idx_dict(self, dict_count, threshold):
+        dict_idx = OrderedDict()
+        for key in dict_count:
+            if dict_count[key] > threshold:
+                dict_idx[key] = self.n_total_features
+                self.n_total_features += 1
+        return dict_idx
+
+    def create_all_idx_dicts(self):
+        self.word_ctag = self.create_idx_dict(self.word_ctag_count, 50)
+        self.suffix = self.create_idx_dict(self.suffix_count, 50)
+        self.prefix = self.create_idx_dict(self.prefix_count, 50)
+        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, 50)
+        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, 50)
+        self.ctag = self.create_idx_dict(self.ctag_count, 50)
+        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, 50)
+        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, 50)
+
+        self.len_word = self.create_idx_dict(self.len_word_count, 50)
+        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, 50)
+        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, 50)
+        self.punctuation = self.create_idx_dict(self.punctuation_count, 50)
+        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, 50)
 
     @staticmethod
     def create_histories(line):
@@ -162,21 +273,91 @@ class feature_statistics_class():
                                       list_of_tuples[i][1], list_of_tuples[i+1][0], list_of_tuples[i-1][0]])
         return list_of_histories
 
-    def get_word_tag_pair_count(self, file_path):
+    def represent_input_with_features(self, history):
+        word, pptag, ptag, ctag, nword, pword = history
+        features = []
+        features += self.fill_word_ctag_count(word, ctag, fill=False)
+        if len(word) > 1:  ########## think about punctuation ############
+            features += self.fill_suffix_count(word, ctag, fill=False)
+            features += self.fill_prefix_count(word, ctag, fill=False)
+            features += self.fill_pptag_ptag_ctag_count(pptag, ptag, ctag, fill=False)
+            features += self.fill_ptag_ctag_count(ptag, ctag, fill=False)
+            features += self.fill_ctag_count(ctag, fill=False)
+            features += self.fill_pword_ctag_count(pword, ctag, fill=False)
+            features += self.fill_nword_ctag_count(nword, ctag, fill=False)
+            features += self.fill_len_word_count(word, ctag, fill=False)
+            features += self.fill_upper_lower_number_count(word, ctag, fill=False)
+            features += self.fill_punctuation_starts_count(word, ctag, fill=False)
+            features += self.fill_punctuation_count(word, ctag, fill=False)
+            features += self.fill_num_of_uppers_count(word, ctag, fill=False)
+        return features
+
+    def create_list_of_lines_histories(self, file_path):
+        list_of_lines_histories = []
+        with open(file_path) as f:
+            for line in f:
+                list_of_lines_histories.append(self.create_histories(line))
+        return list_of_lines_histories
+
+    def create_all_dicts(self):
         """
             Extract out of text all word/tag pairs
             :param file_path: full path of the file to read
                 return all word/tag pairs with index of appearance
         """
-        with open(file_path) as f:
-            for line in f:
-                line_histories = self.create_histories(line)
-                for history in line_histories:
-                    self.fill_all_dicts(history)
+        for line_histories in self.list_of_lines_histories:
+            for history in line_histories:
+                self.n_total_histories += 1
+                self.fill_all_dicts(history)
+        self.create_all_idx_dicts()
 
+    def create_features(self, tag=''):
+        idx = 0
+        row, col, data = [], [], []
+        for line_histories in self.list_of_lines_histories:
+            for history in line_histories:
+                history_tmp = history.copy()
+                if tag != '':
+                    history_tmp[3] = tag
+                features = self.represent_input_with_features(history_tmp)
+                n_feature = len(features)
+                row += [idx] * n_feature
+                col += features
+                data += [True] * n_feature
+                idx += 1
+        return csr_matrix((data, (row, col)), shape=(self.n_total_histories, self.n_total_features), dtype=bool)
 
+    def create_all_mats(self):
+        list_of_mats = []
+        tags = list(self.ctag.keys())
+        for tag in tags:
+            list_of_mats.append(self.create_features(tag))
+        return list_of_mats
 
+        # feature_statistics_class.print_statistics('word_ctag_count', self.word_ctag_count)
+        # feature_statistics_class.print_statistics('suffix_count', self.suffix_count)
+        # feature_statistics_class.print_statistics('prefix_count', self.prefix_count)
+        # feature_statistics_class.print_statistics('pptag_ptag_ctag_count', self.pptag_ptag_ctag_count)
+        # feature_statistics_class.print_statistics('ptag_ctag_count', self.ptag_ctag_count)
+        # feature_statistics_class.print_statistics('ctag_count', self.ctag_count)
+        # feature_statistics_class.print_statistics('pword_ctag_count', self.pword_ctag_count)
+        # feature_statistics_class.print_statistics('nword_ctag_count', self.nword_ctag_count)
 
-file_path = "data/train1.wtag"
-features = feature_statistics_class()
-features.get_word_tag_pair_count(file_path)
+    @staticmethod
+    def print_statistics(name, dic):
+        print('##', name, '##')
+        print("# keys+ctag: ", len(dic))
+        print("sum of values: ", sum([dic[key] for key in dic]))
+        print("# keys wiothout ctag: ", len(set([key[:-1] for key in dic])))
+        for i in range(1, 5):
+            print(i, len([key for key in dic if dic[key] >= i]))
+
+    def save(self, fname):
+        with open(fname, 'wb') as file:
+            pickle.dump(self, file)
+
+    @staticmethod
+    def load(fname):
+        with open(fname, 'rb') as file:
+            return pickle.load(file)
+
