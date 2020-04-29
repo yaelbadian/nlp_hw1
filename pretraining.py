@@ -248,20 +248,20 @@ class feature_statistics_class():
         return dict_idx
 
     def create_all_idx_dicts(self):
-        self.word_ctag = self.create_idx_dict(self.word_ctag_count, 50)
-        self.suffix = self.create_idx_dict(self.suffix_count, 50)
-        self.prefix = self.create_idx_dict(self.prefix_count, 50)
-        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, 50)
-        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, 50)
-        self.ctag = self.create_idx_dict(self.ctag_count, 50)
-        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, 50)
-        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, 50)
+        self.word_ctag = self.create_idx_dict(self.word_ctag_count, 100)
+        self.suffix = self.create_idx_dict(self.suffix_count, 100)
+        self.prefix = self.create_idx_dict(self.prefix_count, 100)
+        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, 100)
+        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, 100)
+        self.ctag = self.create_idx_dict(self.ctag_count, 100)
+        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, 100)
+        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, 100)
 
-        self.len_word = self.create_idx_dict(self.len_word_count, 50)
-        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, 50)
-        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, 50)
-        self.punctuation = self.create_idx_dict(self.punctuation_count, 50)
-        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, 50)
+        self.len_word = self.create_idx_dict(self.len_word_count, 100)
+        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, 100)
+        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, 100)
+        self.punctuation = self.create_idx_dict(self.punctuation_count, 100)
+        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, 100)
 
     @staticmethod
     def create_histories(line):
@@ -297,7 +297,7 @@ class feature_statistics_class():
         with open(file_path) as f:
             for line in f:
                 list_of_lines_histories.append(self.create_histories(line))
-        return list_of_lines_histories
+        return list_of_lines_histories[:100]
 
     def create_all_dicts(self):
         """
