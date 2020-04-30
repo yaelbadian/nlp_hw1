@@ -23,6 +23,7 @@ viterbi = Viterbi(features, weights)
 list_on_sentences, real_list_of_tags = evaluation.prepare_test_data(test_path)
 pred_list_of_tags = viterbi.predict_tags(list_on_sentences)
 accuracy, accuracies = evaluation.calculate_accuracy(real_list_of_tags, pred_list_of_tags)
+print(features.n_total_features)
 print(accuracy)
 print(accuracies)
 

@@ -10,6 +10,7 @@ class Features:
         self.n_total_histories = 0
         self.all_tags = set([])
         self.pucts = ['!', '@', '#', '.', ':', ',', '$', '&', '%', '$', '~', "'", '+', '=', '*', '^', '>', '<', ';', '``']
+        self.numbers = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'Thousand', 'million', 'billion']
         self.list_of_lines_histories = self.create_list_of_lines_histories(file_path)
 
         # Init all features dictionaries
@@ -27,7 +28,7 @@ class Features:
         self.punctuation_starts_count = OrderedDict()  # (1) punc (2) starts with 0-Upper 1-Lower 2-number (3) after punc starts with 0-Upper 1-Lower 2-number
         self.punctuation_count = OrderedDict()  # (1) punc (2) have uppers (3) have lowers (4) have numbers
         self.num_of_uppers_count = OrderedDict()  # numbers of uppers
-
+        self.is_number_count = OrderedDict()
         self.create_all_dicts()
 
     @staticmethod
@@ -61,7 +62,7 @@ class Features:
             dict[key] = 1
 
     def fill_word_ctag_count(self, word, ctag, fill=True):
-        key = (word, ctag)
+        key = (word.lower(), ctag)
         if fill:
             self.add_key_to_dict(key, self.word_ctag_count)
         else:
@@ -72,6 +73,7 @@ class Features:
 
     def fill_suffix_count(self, word, ctag, fill=True):
         features = []
+        word = word.lower()
         n = len(word)
         for i in range(1, 4):
             if n >= i + 2:
@@ -88,6 +90,7 @@ class Features:
 
     def fill_prefix_count(self, word, ctag, fill=True):
         features = []
+        word = word.lower()
         n = len(word)
         for i in range(1, 4):
             if n >= i + 2:
@@ -133,7 +136,7 @@ class Features:
                 return []
 
     def fill_pword_ctag_count(self, pword, ctag, fill=True):
-        key = (pword, ctag)
+        key = (pword.lower(), ctag)
         if fill:
             self.add_key_to_dict(key, self.pword_ctag_count)
         else:
@@ -143,7 +146,7 @@ class Features:
                 return []
 
     def fill_nword_ctag_count(self, nword, ctag, fill=True):
-        key = (nword, ctag)
+        key = (nword.lower(), ctag)
         if fill:
             self.add_key_to_dict(key, self.nword_ctag_count)
         else:
@@ -163,9 +166,11 @@ class Features:
                 return []
 
     def fill_upper_lower_number_count(self, word, ctag, fill=True):
-        c = word[0]
+        c = Features.map_char(word[0])
         has_upper, has_lower, has_number = Features.map_word(word[1:])
-        key = (Features.map_char(c), has_upper, has_lower, has_number, ctag)
+        if c == 2 and len(word) == 1:
+            has_number = True
+        key = (c, has_upper, has_lower, has_number, ctag)
         if fill:
             self.add_key_to_dict(key, self.upper_lower_number_count)
         else:
@@ -186,13 +191,14 @@ class Features:
                 else:
                     mapped = 3
                 key = (c, Features.map_char(word[0]), mapped, ctag)
-        if fill:
+        if fill and key is not None:
             self.add_key_to_dict(key, self.punctuation_starts_count)
             return
-        if key in self.punctuation_starts:
-            return [self.punctuation_starts[key]]
-        else:
-            return []
+        elif not fill:
+            if key in self.punctuation_starts:
+                return [self.punctuation_starts[key]]
+            else:
+                return []
 
     def fill_punctuation_count(self, word, ctag, fill=True):
         key = None
@@ -201,13 +207,14 @@ class Features:
             if Features.map_char(c) == 3:
                 has_upper, has_lower, has_number = Features.map_word(word)
                 key = (c, has_upper, has_lower, has_number, ctag)
-        if fill:
+        if fill and key is not None:
             self.add_key_to_dict(key, self.punctuation_count)
             return
-        if key in self.punctuation:
-            return [self.punctuation[key]]
-        else:
-            return []
+        elif not fill:
+            if key in self.punctuation:
+                return [self.punctuation[key]]
+            else:
+                return []
 
     def fill_num_of_uppers_count(self, word, ctag, fill=True):
         n = 0
@@ -220,6 +227,25 @@ class Features:
         else:
             if key in self.num_of_uppers:
                 return [self.num_of_uppers[key]]
+            else:
+                return []
+
+    def fill_is_number_count(self, word, ctag, fill=True):
+        is_number = True
+        if word[0] == '-':
+            word = word[1:]
+        word = word.replace('.', '')
+        for c in word:
+            if self.map_char(c) != 2:
+                is_number = False
+        if word.lower() in self.numbers:
+            is_number = True
+        key = (is_number, ctag)
+        if fill:
+            self.add_key_to_dict(key, self.is_number_count)
+        else:
+            if key in self.is_number:
+                return [self.is_number[key]]
             else:
                 return []
 
@@ -239,6 +265,7 @@ class Features:
             self.fill_punctuation_starts_count(word, ctag)
             self.fill_punctuation_count(word, ctag)
             self.fill_num_of_uppers_count(word, ctag)
+            self.fill_is_number_count(word, ctag)
 
     def create_idx_dict(self, dict_count, threshold):
         dict_idx = OrderedDict()
@@ -249,20 +276,21 @@ class Features:
         return dict_idx
 
     def create_all_idx_dicts(self):
-        self.word_ctag = self.create_idx_dict(self.word_ctag_count, 100)
-        self.suffix = self.create_idx_dict(self.suffix_count, 100)
-        self.prefix = self.create_idx_dict(self.prefix_count, 100)
-        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, 100)
-        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, 100)
-        self.ctag = self.create_idx_dict(self.ctag_count, 100)
-        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, 100)
-        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, 100)
+        self.word_ctag = self.create_idx_dict(self.word_ctag_count, 5)
+        self.suffix = self.create_idx_dict(self.suffix_count, 20)
+        self.prefix = self.create_idx_dict(self.prefix_count, 20)
+        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, 5)
+        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, 5)
+        self.ctag = self.create_idx_dict(self.ctag_count, 5)
+        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, 5)
+        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, 5)
 
-        self.len_word = self.create_idx_dict(self.len_word_count, 100)
-        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, 100)
-        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, 100)
-        self.punctuation = self.create_idx_dict(self.punctuation_count, 100)
-        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, 100)
+        self.len_word = self.create_idx_dict(self.len_word_count, 5)
+        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, 5)
+        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, 5)
+        self.punctuation = self.create_idx_dict(self.punctuation_count, 5)
+        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, 5)
+        self.is_number = self.create_idx_dict(self.is_number_count, 5)
 
     @staticmethod
     def create_histories(line):
@@ -335,15 +363,6 @@ class Features:
         for tag in tags:
             list_of_mats.append(self.create_features(tag))
         return list_of_mats
-
-        # feature_statistics_class.print_statistics('word_ctag_count', self.word_ctag_count)
-        # feature_statistics_class.print_statistics('suffix_count', self.suffix_count)
-        # feature_statistics_class.print_statistics('prefix_count', self.prefix_count)
-        # feature_statistics_class.print_statistics('pptag_ptag_ctag_count', self.pptag_ptag_ctag_count)
-        # feature_statistics_class.print_statistics('ptag_ctag_count', self.ptag_ctag_count)
-        # feature_statistics_class.print_statistics('ctag_count', self.ctag_count)
-        # feature_statistics_class.print_statistics('pword_ctag_count', self.pword_ctag_count)
-        # feature_statistics_class.print_statistics('nword_ctag_count', self.nword_ctag_count)
 
     @staticmethod
     def print_statistics(name, dic):

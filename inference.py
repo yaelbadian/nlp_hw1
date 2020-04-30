@@ -52,7 +52,7 @@ class Viterbi:
         bp = defaultdict(lambda: defaultdict(lambda: defaultdict(str)))
         for i in range(1, n+1):
             for u in pi[i-1].keys():  # all the v's from last iteration
-                for v in self.features.all_tags: # all the v's from current iteration
+                for v in self.features.all_tags:  # all the v's from current iteration
                     for t in pi[i-1][u].keys():
                         history = (sentence[i], t, u, v, sentence[i+1], sentence[i-1])
                         score = self.calculate_q(history)
