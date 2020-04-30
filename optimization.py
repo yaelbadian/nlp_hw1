@@ -33,7 +33,7 @@ class Optimization:
         return np.log(sum_of_exps).sum()
 
     def calculate_regularization_term(self, v):
-        return -0.5 * self.lamda * (v**2).sum()
+        return 0.5 * self.lamda * (v**2).sum()
 
     def calculate_empirical_counts(self):
         return self.mat.sum(axis=0)
@@ -50,8 +50,17 @@ class Optimization:
     def calc_objective_per_iter(self, v):
         exps = self.calculate_exps(v)
         sum_of_exps = self.calculate_sum_exps(exps)
-        likelihood = self.calculate_linear_term(v) - self.calculate_normalization_term(sum_of_exps) - self.calculate_regularization_term(v)
-        grad = self.calculate_empirical_counts() - self.calculate_expected_counts(exps, sum_of_exps) - self.calculate_regularization_grad(v)
+        linear_term = self.calculate_linear_term(v)
+        normalization_term = self.calculate_normalization_term(sum_of_exps)
+        regularization_term = self.calculate_regularization_term(v)
+        empirical_counts = self.calculate_empirical_counts()
+        expected_counts = self.calculate_expected_counts(exps, sum_of_exps)
+        regularization_grad = self.calculate_regularization_grad(v)
+        likelihood = linear_term - normalization_term - regularization_term
+        grad = empirical_counts - expected_counts - regularization_grad
+        print('linear_term:', linear_term, ', normalization_term:', normalization_term, ', regularization_term:', regularization_term,
+              ' empirical_counts:', empirical_counts, ' expected_counts:', expected_counts, ' regularization_grad:', regularization_grad,
+              ', likelihood:', likelihood, ', grad', grad)
         return (-1) * likelihood, (-1) * grad
 
     @staticmethod

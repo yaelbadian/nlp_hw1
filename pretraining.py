@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from scipy.sparse import csr_matrix
 import pickle
 
@@ -29,6 +29,7 @@ class Features:
         self.punctuation_count = OrderedDict()  # (1) punc (2) have uppers (3) have lowers (4) have numbers
         self.num_of_uppers_count = OrderedDict()  # numbers of uppers
         self.is_number_count = OrderedDict()
+        self.idx_to_feature = {}
         self.create_all_dicts()
 
     @staticmethod
@@ -272,6 +273,7 @@ class Features:
         for key in dict_count:
             if dict_count[key] > threshold:
                 dict_idx[key] = self.n_total_features
+                self.idx_to_feature[self.n_total_features] = key
                 self.n_total_features += 1
         return dict_idx
 
@@ -370,8 +372,10 @@ class Features:
         print("# keys+ctag: ", len(dic))
         print("sum of values: ", sum([dic[key] for key in dic]))
         print("# keys wiothout ctag: ", len(set([key[:-1] for key in dic])))
+        print("check threshold: ")
         for i in range(1, 5):
             print(i, len([key for key in dic if dic[key] >= i]))
+        print("most common keys: ", Counter(dic).most_common(50))
 
     def save(self, fname):
         with open(fname, 'wb') as file:
