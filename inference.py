@@ -51,14 +51,17 @@ class Viterbi:
         pi[0]['*']['*'] = 1
         bp = defaultdict(lambda: defaultdict(lambda: defaultdict(str)))
         for i in range(1, n+1):
+            if i == n:
+                print()
             for u in pi[i-1].keys():  # all the v's from last iteration
                 for v in self.features.all_tags:  # all the v's from current iteration
                     for t in pi[i-1][u].keys():
                         history = (sentence[i], t, u, v, sentence[i+1], sentence[i-1])
-                        score = self.calculate_q(history)
+                        score = pi[i-1][u][t] * self.calculate_q(history)
                         if score >= pi[i][v][u]:
                             pi[i][v][u] = score
                             bp[i][v][u] = t
+                    print("word:", sentence[i], "i:", i, "u:", u, "v:", v, "t:", bp[i][v][u], "pi:", pi[i][v][u])
         score = 0
         for v in pi[n].keys():
             for u in pi[n][v].keys():
@@ -66,9 +69,9 @@ class Viterbi:
                     score = pi[n][v][u]
                     tags[n] = v
                     tags[n-1] = u
-        for i in range(n-2, 1, -1):
+        for i in range(n-2, 0, -1):
             tags[i] = bp[i+2][tags[i+2]][tags[i+1]]
-        return tags
+        return tags[1:]
 
     def predict_tags(self, list_of_sentences):
         list_of_tags = []

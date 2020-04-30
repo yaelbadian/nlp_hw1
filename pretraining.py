@@ -11,6 +11,8 @@ class Features:
         self.all_tags = set([])
         self.pucts = ['!', '@', '#', '.', ':', ',', '$', '&', '%', '$', '~', "'", '+', '=', '*', '^', '>', '<', ';', '``']
         self.numbers = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'Thousand', 'million', 'billion']
+        self.one_len_prefix = ['a']
+        self.one_len_suffix = ['e', 'y', 's']
         self.list_of_lines_histories = self.create_list_of_lines_histories(file_path)
 
         # Init all features dictionaries
@@ -361,7 +363,7 @@ class Features:
 
     def create_all_mats(self):
         list_of_mats = []
-        tags = list(self.ctag.keys())
+        tags = list(self.all_tags)
         for tag in tags:
             list_of_mats.append(self.create_features(tag))
         return list_of_mats

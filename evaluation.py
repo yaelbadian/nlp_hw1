@@ -10,9 +10,9 @@ def prepare_test_data(test_path):
             sentence = ''
             tags = []
             for word in line.split(' '):
-                sentence += word.split('_')[0]
-                tags.append(word.split('_')[1])
-            list_on_sentences.append(sentence)
+                sentence += word.split('_')[0] + ' '
+                tags.append(word.split('_')[1].rstrip())
+            list_on_sentences.append(sentence.rstrip())
             list_of_tags.append(tags)
     return list_on_sentences, list_of_tags
 
@@ -30,6 +30,7 @@ def create_confusion_matrix(real_list_of_tags, pred_list_of_tags):
     for real_tags, pred_tags in zip(real_list_of_tags, pred_list_of_tags):
         for real_tag, pred_tag in zip(real_tags, pred_tags):
             confusion_matrix[real_tag][pred_tag] += 1
+    print(confusion_matrix)
     return confusion_matrix
 
 
