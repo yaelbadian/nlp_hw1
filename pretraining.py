@@ -3,11 +3,12 @@ from scipy.sparse import csr_matrix
 import pickle
 
 
-class feature_statistics_class():
+class Features:
 
     def __init__(self, file_path):
         self.n_total_features = 0  # Total number of features accumulated
         self.n_total_histories = 0
+        self.all_tags = set([])
         self.pucts = ['!', '@', '#', '.', ':', ',', '$', '&', '%', '$', '~', "'", '+', '=', '*', '^', '>', '<', ';', '``']
         self.list_of_lines_histories = self.create_list_of_lines_histories(file_path)
 
@@ -44,7 +45,7 @@ class feature_statistics_class():
     def map_word(word):
         has_upper, has_lower, has_number = False, False, False
         for c in word:
-            mapped = feature_statistics_class.map_char(c)
+            mapped = Features.map_char(c)
             if mapped == 0:
                 has_upper = True
             elif mapped == 1:
@@ -163,8 +164,8 @@ class feature_statistics_class():
 
     def fill_upper_lower_number_count(self, word, ctag, fill=True):
         c = word[0]
-        has_upper, has_lower, has_number = feature_statistics_class.map_word(word[1:])
-        key = (feature_statistics_class.map_char(c), has_upper, has_lower, has_number, ctag)
+        has_upper, has_lower, has_number = Features.map_word(word[1:])
+        key = (Features.map_char(c), has_upper, has_lower, has_number, ctag)
         if fill:
             self.add_key_to_dict(key, self.upper_lower_number_count)
         else:
@@ -178,13 +179,13 @@ class feature_statistics_class():
         key = None
         word = word.replace('.', '')
         for c in word:
-            if feature_statistics_class.map_char(c) == 3:
+            if Features.map_char(c) == 3:
                 mapped = word.split(c)[-1]
                 if len(mapped) > 0:  # ends with punc
-                    mapped = feature_statistics_class.map_char(word.split(c)[-1][0])
+                    mapped = Features.map_char(word.split(c)[-1][0])
                 else:
                     mapped = 3
-                key = (c, feature_statistics_class.map_char(word[0]), mapped, ctag)
+                key = (c, Features.map_char(word[0]), mapped, ctag)
         if fill:
             self.add_key_to_dict(key, self.punctuation_starts_count)
             return
@@ -197,8 +198,8 @@ class feature_statistics_class():
         key = None
         word = word.replace('.', '')
         for c in word:
-            if feature_statistics_class.map_char(c) == 3:
-                has_upper, has_lower, has_number = feature_statistics_class.map_word(word)
+            if Features.map_char(c) == 3:
+                has_upper, has_lower, has_number = Features.map_word(word)
                 key = (c, has_upper, has_lower, has_number, ctag)
         if fill:
             self.add_key_to_dict(key, self.punctuation_count)
@@ -211,7 +212,7 @@ class feature_statistics_class():
     def fill_num_of_uppers_count(self, word, ctag, fill=True):
         n = 0
         for c in word:
-            if feature_statistics_class.map_char(c) == 0:
+            if Features.map_char(c) == 0:
                 n += 1
         key = (n, ctag)
         if fill:
@@ -297,7 +298,8 @@ class feature_statistics_class():
         with open(file_path) as f:
             for line in f:
                 list_of_lines_histories.append(self.create_histories(line))
-        return list_of_lines_histories[:100]
+        self.all_tags = set([h[3] for line_histories in list_of_lines_histories for h in line_histories])
+        return list_of_lines_histories
 
     def create_all_dicts(self):
         """
