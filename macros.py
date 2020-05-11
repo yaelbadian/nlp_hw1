@@ -1,3 +1,10 @@
+pucts = ['!', '@', '#', '.', ':', ',', '$', '&', '%', '$', '~', "'", '+', '=', '*', '^', '>', '<', ';', '``']
+
+numbers = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven',
+                'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty',
+                'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'Thousand', 'million',
+                'billion']
+
 suffixes = {'y', 'ic', 'er', 'ly', 'en', 'or', 'fy', 'ar', 'an', 'es', 'ed', 'cy', 'ia', 'al', 'ty', 'ify', 'ure',
             'ics', 'ite', 'ply', 'sue', 'dit', 'gen', 'dox', 'act', 'ity', 'ist', 'nym', 'log', 'ies', 'ing', 'art',
             'ade', 'mit', 'pod', 'ate', 'pel', 'ver', 'ish', 'ice', 'ive', 'mal', 'age', 'fer', 'ian', 'acy', 'ory',

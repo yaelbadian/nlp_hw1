@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.sparse import csr_matrix
-import scipy
 from scipy.optimize import fmin_l_bfgs_b
+from multiprocessing import Pool
+import os
+import itertools
 
 
 class Optimization:

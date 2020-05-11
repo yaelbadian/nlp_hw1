@@ -35,26 +35,31 @@ test_path = "data/test1.wtag"
 # features.print_statistics('num_of_uppers', features.num_of_uppers_count)
 # features.print_statistics('is_number', features.is_number_count)
 
-# features.save('features.pkl')
-features = Features.load('features.pkl')
+# features.save('features_updated.pkl')
+features = Features.load('features_updated.pkl')
+mat = features.create_features()
+list_of_mats = features.create_all_mats()
+
+weights = Optimization.optimize_weights(mat, list_of_mats)
+print_features_and_weights(weights, features)
+weights_path = 'trained_weights_data_1_updated.pkl'  # i identifies which dataset this is trained on
+print(weights)
+with open(weights_path, 'wb') as f:
+    pickle.dump(weights, f)
 
 
-# weights = Optimization.optimize_weights(mat, list_of_mats)
-# print_features_and_weights(weights, features)
-weights_path = 'trained_weights_data_1.pkl'  # i identifies which dataset this is trained on
-# print(weights)
-# with open(weights_path, 'wb') as f:
-#     pickle.dump(weights, f)
-with open(weights_path, 'rb') as file:
-    weights = pickle.load(file)
 
 
-viterbi = Viterbi(features, weights)
-list_on_sentences, real_list_of_tags = evaluation.prepare_test_data(test_path)
-pred_list_of_tags = viterbi.predict_tags(list_on_sentences[:1])
-accuracy, accuracies = evaluation.calculate_accuracy(real_list_of_tags[:1], pred_list_of_tags[:1])
-print(accuracy)
-print(accuracies)
+# with open(weights_path, 'rb') as file:
+#     weights = pickle.load(file)
+#
+#
+# viterbi = Viterbi(features, weights)
+# list_on_sentences, real_list_of_tags = evaluation.prepare_test_data(test_path)
+# pred_list_of_tags = viterbi.predict_tags(list_on_sentences[:1])
+# accuracy, accuracies = evaluation.calculate_accuracy(real_list_of_tags[:1], pred_list_of_tags[:1])
+# print(accuracy)
+# print(accuracies)
 
 
 

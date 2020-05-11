@@ -1,7 +1,7 @@
 from collections import OrderedDict, Counter
 from scipy.sparse import csr_matrix
 import pickle
-from macros import prefixes, suffixes
+from macros import pucts, numbers, prefixes, suffixes
 
 
 class Features:
@@ -10,8 +10,8 @@ class Features:
         self.n_total_features = 0  # Total number of features accumulated
         self.n_total_histories = 0
         self.all_tags = set([])
-        self.pucts = ['!', '@', '#', '.', ':', ',', '$', '&', '%', '$', '~', "'", '+', '=', '*', '^', '>', '<', ';', '``']
-        self.numbers = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'Thousand', 'million', 'billion']
+        self.pucts = pucts
+        self.numbers = numbers
         self.prefixes = prefixes
         self.suffixes = suffixes
         self.list_of_lines_histories = self.create_list_of_lines_histories(file_path)
@@ -79,14 +79,17 @@ class Features:
         features = []
         word = word.lower()
         n = len(word)
-        for i in range(1, 4):
-            if n >= i + 2:
+        for i in range(7, 0, -1):
+            if i > n:
+                continue
+            if word[-i:] in self.suffixes:
                 key = (word[-i:], ctag)
                 if fill:
                     self.add_key_to_dict(key, self.suffix_count)
                 else:
                     if key in self.suffix:
                         features.append(self.suffix[key])
+                break
         if not fill:
             return features
         else:
@@ -96,14 +99,17 @@ class Features:
         features = []
         word = word.lower()
         n = len(word)
-        for i in range(1, 4):
-            if n >= i + 2:
+        for i in range(7, 0, -1):
+            if word[:i] in self.prefixes:
+                if i > n:
+                    continue
                 key = (word[:i], ctag)
                 if fill:
                     self.add_key_to_dict(key, self.prefix_count)
                 else:
                     if key in self.prefix:
                         features.append(self.prefix[key])
+                break
         if not fill:
             return features
         else:
@@ -282,20 +288,20 @@ class Features:
 
     def create_all_idx_dicts(self):
         self.word_ctag = self.create_idx_dict(self.word_ctag_count, 5)
-        self.suffix = self.create_idx_dict(self.suffix_count, 20)
-        self.prefix = self.create_idx_dict(self.prefix_count, 20)
-        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, 5)
-        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, 5)
-        self.ctag = self.create_idx_dict(self.ctag_count, 5)
-        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, 5)
-        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, 5)
+        self.suffix = self.create_idx_dict(self.suffix_count, 5)
+        self.prefix = self.create_idx_dict(self.prefix_count, 5)
+        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, 3)
+        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, 3)
+        self.ctag = self.create_idx_dict(self.ctag_count, 3)
+        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, 3)
+        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, 3)
 
-        self.len_word = self.create_idx_dict(self.len_word_count, 5)
-        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, 5)
-        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, 5)
-        self.punctuation = self.create_idx_dict(self.punctuation_count, 5)
-        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, 5)
-        self.is_number = self.create_idx_dict(self.is_number_count, 5)
+        self.len_word = self.create_idx_dict(self.len_word_count, 3)
+        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, 3)
+        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, 3)
+        self.punctuation = self.create_idx_dict(self.punctuation_count, 3)
+        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, 3)
+        self.is_number = self.create_idx_dict(self.is_number_count, 3)
 
     @staticmethod
     def create_histories(line):
