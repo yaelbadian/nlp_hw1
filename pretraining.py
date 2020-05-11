@@ -1,6 +1,7 @@
 from collections import OrderedDict, Counter
 from scipy.sparse import csr_matrix
 import pickle
+from macros import prefixes, suffixes
 
 
 class Features:
@@ -11,8 +12,8 @@ class Features:
         self.all_tags = set([])
         self.pucts = ['!', '@', '#', '.', ':', ',', '$', '&', '%', '$', '~', "'", '+', '=', '*', '^', '>', '<', ';', '``']
         self.numbers = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'Thousand', 'million', 'billion']
-        self.one_len_prefix = ['a']
-        self.one_len_suffix = ['e', 'y', 's']
+        self.prefixes = prefixes
+        self.suffixes = suffixes
         self.list_of_lines_histories = self.create_list_of_lines_histories(file_path)
 
         # Init all features dictionaries
