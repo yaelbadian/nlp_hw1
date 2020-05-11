@@ -1,12 +1,12 @@
-from collections import OrderedDict, Counter
+from collections import OrderedDict, Counter, defaultdict
 from scipy.sparse import csr_matrix
 import pickle
 from macros import pucts, numbers, prefixes, suffixes
 
-
 class Features:
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, thresholds):
+        self.thresholds = thresholds
         self.n_total_features = 0  # Total number of features accumulated
         self.n_total_histories = 0
         self.all_tags = set([])
@@ -33,7 +33,7 @@ class Features:
         self.num_of_uppers_count = OrderedDict()  # numbers of uppers
         self.is_number_count = OrderedDict()
         self.idx_to_feature = {}
-        self.create_all_dicts()
+        self.create_all_dicts(thresholds)
 
     @staticmethod
     def map_char(c):
@@ -59,7 +59,8 @@ class Features:
                 has_number = True
         return has_upper, has_lower, has_number
 
-    def add_key_to_dict(self, key, dict):
+    @staticmethod
+    def add_key_to_dict(key, dict):
         if key in dict:
             dict[key] += 1
         else:
@@ -287,21 +288,21 @@ class Features:
         return dict_idx
 
     def create_all_idx_dicts(self):
-        self.word_ctag = self.create_idx_dict(self.word_ctag_count, 5)
-        self.suffix = self.create_idx_dict(self.suffix_count, 5)
-        self.prefix = self.create_idx_dict(self.prefix_count, 5)
-        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, 3)
-        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, 3)
-        self.ctag = self.create_idx_dict(self.ctag_count, 3)
-        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, 3)
-        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, 3)
+        self.word_ctag = self.create_idx_dict(self.word_ctag_count, self.thresholds['word_ctag'])
+        self.suffix = self.create_idx_dict(self.suffix_count, self.thresholds['suffix'])
+        self.prefix = self.create_idx_dict(self.prefix_count, self.thresholds['prefix'])
+        self.pptag_ptag_ctag = self.create_idx_dict(self.pptag_ptag_ctag_count, self.thresholds['pptag_ptag_ctag'])
+        self.ptag_ctag = self.create_idx_dict(self.ptag_ctag_count, self.thresholds['ptag_ctag'])
+        self.ctag = self.create_idx_dict(self.ctag_count, self.thresholds['ctag'])
+        self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, self.thresholds['pword_ctag'])
+        self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, self.thresholds['nword_ctag'])
 
-        self.len_word = self.create_idx_dict(self.len_word_count, 3)
-        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, 3)
-        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, 3)
-        self.punctuation = self.create_idx_dict(self.punctuation_count, 3)
-        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, 3)
-        self.is_number = self.create_idx_dict(self.is_number_count, 3)
+        self.len_word = self.create_idx_dict(self.len_word_count, self.thresholds['len_word'])
+        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, self.thresholds['upper_lower_number'])
+        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, self.thresholds['punctuation_starts'])
+        self.punctuation = self.create_idx_dict(self.punctuation_count, self.thresholds['punctuation'])
+        self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, self.thresholds['num_of_uppers'])
+        self.is_number = self.create_idx_dict(self.is_number_count, self.thresholds['is_number'])
 
     @staticmethod
     def create_histories(line):
