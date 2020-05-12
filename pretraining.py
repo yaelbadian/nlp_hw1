@@ -1,7 +1,7 @@
 from collections import OrderedDict, Counter, defaultdict
 from scipy.sparse import csr_matrix
 import pickle
-from macros import pucts, numbers, prefixes, suffixes
+from macros import pucts, numbers, prefixes, suffixes, simple_past, past_participle
 
 class Features:
 
@@ -14,6 +14,8 @@ class Features:
         self.numbers = numbers
         self.prefixes = prefixes
         self.suffixes = suffixes
+        self.simple_past = simple_past
+        self.past_participle = past_participle
         self.list_of_lines_histories = self.create_list_of_lines_histories(file_path)
 
         # Init all features dictionaries
@@ -32,8 +34,9 @@ class Features:
         self.punctuation_count = OrderedDict()  # (1) punc (2) have uppers (3) have lowers (4) have numbers
         self.num_of_uppers_count = OrderedDict()  # numbers of uppers
         self.is_number_count = OrderedDict()
+        self.irregular_verb_count = OrderedDict()
         self.idx_to_feature = {}
-        self.create_all_dicts(thresholds)
+        self.create_all_dicts()
 
     @staticmethod
     def map_char(c):
@@ -81,7 +84,7 @@ class Features:
         word = word.lower()
         n = len(word)
         for i in range(7, 0, -1):
-            if i > n:
+            if i >= n:
                 continue
             if word[-i:] in self.suffixes:
                 key = (word[-i:], ctag)
@@ -102,7 +105,7 @@ class Features:
         n = len(word)
         for i in range(7, 0, -1):
             if word[:i] in self.prefixes:
-                if i > n:
+                if i >= n:
                     continue
                 key = (word[:i], ctag)
                 if fill:
@@ -176,8 +179,10 @@ class Features:
             else:
                 return []
 
-    def fill_upper_lower_number_count(self, word, ctag, fill=True):
+    def fill_upper_lower_number_count(self, word, ctag, ptag, fill=True):
         c = Features.map_char(word[0])
+        if ptag == '*' and c == 0:
+            c = 1
         has_upper, has_lower, has_number = Features.map_word(word[1:])
         if c == 2 and len(word) == 1:
             has_number = True
@@ -260,10 +265,27 @@ class Features:
             else:
                 return []
 
+    def fill_irregular_verb_count(self, word, ctag, fill=True):
+        if word in self.simple_past and word in self.past_participle:
+            key = (2, ctag)
+        elif word in self.simple_past:
+            key = (0, ctag)
+        elif word in self.past_participle:
+            key = (1, ctag)
+        else:
+            return
+        if fill:
+            self.add_key_to_dict(key, self.irregular_verb_count)
+        else:
+            if key in self.irregular_verb:
+                return [self.irregular_verb[key]]
+            else:
+                return []
+
     def fill_all_dicts(self, history):
         word, pptag, ptag, ctag, nword, pword = history
         self.fill_word_ctag_count(word, ctag)
-        if len(word) > 1:  ########## think about punctuation ############
+        if len(word) > 1:
             self.fill_suffix_count(word, ctag)
             self.fill_prefix_count(word, ctag)
             self.fill_pptag_ptag_ctag_count(pptag, ptag, ctag)
@@ -272,11 +294,12 @@ class Features:
             self.fill_pword_ctag_count(pword, ctag)
             self.fill_nword_ctag_count(nword, ctag)
             self.fill_len_word_count(word, ctag)
-            self.fill_upper_lower_number_count(word, ctag)
+            self.fill_upper_lower_number_count(word, ctag, ptag)
             self.fill_punctuation_starts_count(word, ctag)
             self.fill_punctuation_count(word, ctag)
             self.fill_num_of_uppers_count(word, ctag)
             self.fill_is_number_count(word, ctag)
+            self.fill_irregular_verb_count(word, ctag)
 
     def create_idx_dict(self, dict_count, threshold):
         dict_idx = OrderedDict()
@@ -303,6 +326,7 @@ class Features:
         self.punctuation = self.create_idx_dict(self.punctuation_count, self.thresholds['punctuation'])
         self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, self.thresholds['num_of_uppers'])
         self.is_number = self.create_idx_dict(self.is_number_count, self.thresholds['is_number'])
+        self.irregular_verb = self.create_idx_dict(self.irregular_verb_count, self.thresholds['irregular_verb'])
 
     @staticmethod
     def create_histories(line):
@@ -327,7 +351,7 @@ class Features:
             features += self.fill_pword_ctag_count(pword, ctag, fill=False)
             features += self.fill_nword_ctag_count(nword, ctag, fill=False)
             features += self.fill_len_word_count(word, ctag, fill=False)
-            features += self.fill_upper_lower_number_count(word, ctag, fill=False)
+            features += self.fill_upper_lower_number_count(word, ctag, ptag, fill=False)
             features += self.fill_punctuation_starts_count(word, ctag, fill=False)
             features += self.fill_punctuation_count(word, ctag, fill=False)
             features += self.fill_num_of_uppers_count(word, ctag, fill=False)

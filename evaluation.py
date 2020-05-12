@@ -1,5 +1,6 @@
 import numpy as np
 from inference import Viterbi
+import pandas as pd
 from collections import defaultdict
 
 def prepare_test_data(test_path):
@@ -31,6 +32,7 @@ def create_confusion_matrix(real_list_of_tags, pred_list_of_tags):
         for real_tag, pred_tag in zip(real_tags, pred_tags):
             confusion_matrix[real_tag][pred_tag] += 1
     print(confusion_matrix)
+    pd.DataFrame(confusion_matrix).to_csv('exp_1_confusion_matrix.csv')
     return confusion_matrix
 
 

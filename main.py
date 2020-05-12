@@ -34,8 +34,14 @@ def optimize(mat, list_of_mats, weights_path):
 def viterbi_alg(test_path, features, weights):
     viterbi = Viterbi(features, weights)
     list_on_sentences, real_list_of_tags = evaluation.prepare_test_data(test_path)
-    pred_list_of_tags = viterbi.predict_tags(list_on_sentences[:1])
-    accuracy, accuracies = evaluation.calculate_accuracy(real_list_of_tags[:1], pred_list_of_tags[:1])
+    pred_list_of_tags = viterbi.predict_tags(list_on_sentences[:200])
+    # for i in range(200):
+    #     print("SENTENCE", i)
+    #     print(list_on_sentences[i])
+    #     for word, t1, t2 in zip(list_on_sentences[i].split(' '), real_list_of_tags[i], pred_list_of_tags[i]):
+    #         if t1 != t2:
+    #             print(word, t1, t2)
+    accuracy, accuracies = evaluation.calculate_accuracy(real_list_of_tags, pred_list_of_tags)
     return accuracy, accuracies
 
 
@@ -43,16 +49,23 @@ if __name__ == '__main__':
     file_path = "data/train1.wtag"
     test_path = "data/test1.wtag"
     for experiment, thresholds in experiments.items():
-        features_path = experiment + '_features.pkl'
-        weights_path = experiment + '_weights.pkl'
+        features_path = 'experiments/' + experiment + '_features.pkl'
+        weights_path = 'experiments/' + experiment + '_weights.pkl'
         features, mat, list_of_mats = create_features(thresholds, file_path, features_path)
         likelihood, weights = optimize(mat, list_of_mats, weights_path)
         accuracy, accuracies = viterbi_alg(test_path, features, weights)
         print("results for experiment: {}, likelihood: {}, accuracy: {}".format(experiment, likelihood, accuracy))
         print(accuracies)
-        with open('results.txt', 'a') as file:
+        with open('experiments/results.txt', 'a') as file:
             file.write("results for experiment: {}, likelihood: {}, accuracy: {}\n".format(experiment, likelihood, accuracy))
 
+    # with open('experiments/exp_1_features.pkl', 'rb') as file:
+    #     features = pickle.load(file)
+    #
+    # with open('experiments/exp_1_weights.pkl', 'rb') as file:
+    #     weights = pickle.load(file)
+    #
+    # viterbi_alg(test_path, features, weights)
 
 
 
