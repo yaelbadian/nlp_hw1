@@ -3,12 +3,12 @@ from inference import Viterbi
 import pickle
 import evaluation
 
-features_model1 = 'experiments/exp_5_features.pkl'
-weights_model1 = 'experiments/exp_5_weights.pkl'
+features_model1 = 'models/exp_5_features.pkl'
+weights_model1 = 'models/exp_5_weights.pkl'
 comp_input_model1 = 'data/comp1.words'
 comp_output_model1 = 'data/comp_m1_204434161.wtag'
-features_model2 = 'experiments/exp_5_features2.pkl'
-weights_model2 = 'experiments/exp_5_weights2.pkl'
+features_model2 = 'models/exp_5_features2.pkl'
+weights_model2 = 'models/exp_5_weights2.pkl'
 comp_input_model2 = 'data/comp2.words'
 comp_output_model2 = 'data/comp_m2_204434161.wtag'
 
