@@ -33,8 +33,8 @@ class Features:
         self.punctuation_starts_count = OrderedDict()  # (1) punc (2) starts with 0-Upper 1-Lower 2-number (3) after punc starts with 0-Upper 1-Lower 2-number
         self.punctuation_count = OrderedDict()  # (1) punc (2) have uppers (3) have lowers (4) have numbers
         self.num_of_uppers_count = OrderedDict()  # numbers of uppers
-        self.is_number_count = OrderedDict()
-        self.irregular_verb_count = OrderedDict()
+        self.is_number_count = OrderedDict() # True if word is number, else False
+        self.irregular_verb_count = OrderedDict() # irregular verbs
         self.idx_to_feature = {}
         self.create_all_dicts()
 
@@ -250,7 +250,7 @@ class Features:
         is_number = True
         if word[0] == '-':
             word = word[1:]
-        word = word.replace('.', '')
+        word = word.replace('.', '').replace(',', '')
         for c in word:
             if self.map_char(c) != 2:
                 is_number = False
@@ -266,18 +266,17 @@ class Features:
                 return []
 
     def fill_irregular_verb_count(self, word, ctag, fill=True):
+        key = None
         if word in self.simple_past and word in self.past_participle:
             key = (2, ctag)
         elif word in self.simple_past:
             key = (0, ctag)
         elif word in self.past_participle:
             key = (1, ctag)
-        else:
-            return
-        if fill:
+        if fill and key is not None:
             self.add_key_to_dict(key, self.irregular_verb_count)
         else:
-            if key in self.irregular_verb:
+            if key is not None and key in self.irregular_verb:
                 return [self.irregular_verb[key]]
             else:
                 return []
@@ -285,20 +284,20 @@ class Features:
     def fill_all_dicts(self, history):
         word, pptag, ptag, ctag, nword, pword = history
         self.fill_word_ctag_count(word, ctag)
+        self.fill_pword_ctag_count(pword, ctag)
+        self.fill_nword_ctag_count(nword, ctag)
+        self.fill_len_word_count(word, ctag)
+        self.fill_is_number_count(word, ctag)
         if len(word) > 1:
             self.fill_suffix_count(word, ctag)
             self.fill_prefix_count(word, ctag)
+            self.fill_ctag_count(ctag)
             self.fill_pptag_ptag_ctag_count(pptag, ptag, ctag)
             self.fill_ptag_ctag_count(ptag, ctag)
-            self.fill_ctag_count(ctag)
-            self.fill_pword_ctag_count(pword, ctag)
-            self.fill_nword_ctag_count(nword, ctag)
-            self.fill_len_word_count(word, ctag)
             self.fill_upper_lower_number_count(word, ctag, ptag)
             self.fill_punctuation_starts_count(word, ctag)
             self.fill_punctuation_count(word, ctag)
             self.fill_num_of_uppers_count(word, ctag)
-            self.fill_is_number_count(word, ctag)
             self.fill_irregular_verb_count(word, ctag)
 
     def create_idx_dict(self, dict_count, threshold):
@@ -319,7 +318,6 @@ class Features:
         self.ctag = self.create_idx_dict(self.ctag_count, self.thresholds['ctag'])
         self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, self.thresholds['pword_ctag'])
         self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, self.thresholds['nword_ctag'])
-
         self.len_word = self.create_idx_dict(self.len_word_count, self.thresholds['len_word'])
         self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, self.thresholds['upper_lower_number'])
         self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, self.thresholds['punctuation_starts'])
@@ -342,19 +340,21 @@ class Features:
         word, pptag, ptag, ctag, nword, pword = history
         features = []
         features += self.fill_word_ctag_count(word, ctag, fill=False)
+        features += self.fill_pword_ctag_count(pword, ctag, fill=False)
+        features += self.fill_nword_ctag_count(nword, ctag, fill=False)
+        features += self.fill_len_word_count(word, ctag, fill=False)
+        features += self.fill_is_number_count(word, ctag, fill=False)
         if len(word) > 1:  ########## think about punctuation ############
             features += self.fill_suffix_count(word, ctag, fill=False)
             features += self.fill_prefix_count(word, ctag, fill=False)
             features += self.fill_pptag_ptag_ctag_count(pptag, ptag, ctag, fill=False)
             features += self.fill_ptag_ctag_count(ptag, ctag, fill=False)
             features += self.fill_ctag_count(ctag, fill=False)
-            features += self.fill_pword_ctag_count(pword, ctag, fill=False)
-            features += self.fill_nword_ctag_count(nword, ctag, fill=False)
-            features += self.fill_len_word_count(word, ctag, fill=False)
             features += self.fill_upper_lower_number_count(word, ctag, ptag, fill=False)
             features += self.fill_punctuation_starts_count(word, ctag, fill=False)
             features += self.fill_punctuation_count(word, ctag, fill=False)
             features += self.fill_num_of_uppers_count(word, ctag, fill=False)
+            features += self.fill_irregular_verb_count(word, ctag, fill=False)
         return features
 
     def create_list_of_lines_histories(self, file_path):
@@ -420,3 +420,38 @@ class Features:
         with open(fname, 'rb') as file:
             return pickle.load(file)
 
+    @staticmethod
+    def calculate_statistics_df(dic):
+        import numpy as np
+        import pandas as pd
+        rows = defaultdict(lambda: defaultdict(int))
+        ctag_rows = defaultdict(lambda: defaultdict(int))
+        for key_ctag, cnt in dic.items():
+            key, ctag = str(key_ctag[:-1]), str(key_ctag[-1])
+            rows[key][ctag] = cnt
+            ctag_rows[ctag]['nunique'] += 1
+            ctag_rows[ctag]['total'] += cnt
+        for key in rows:
+            total, entropy = 0, 0
+            for ctag in rows[key]:
+                total += rows[key][ctag]
+            for ctag in rows[key]:
+                rows[key][ctag] = rows[key][ctag] / max(1, total)
+                entropy += -rows[key][ctag] * np.log(rows[key][ctag])
+            rows[key]['nunique'] = len(rows[key])
+            rows[key]['total'] = total
+            rows[key]['entropy'] = entropy
+        df = pd.DataFrame(rows).T.fillna(0)
+        ctags_df = pd.DataFrame(ctag_rows)
+        ctags_entropy = pd.DataFrame(df.apply(lambda x: (- x * np.log(x.where(x > 0, 1))).sum(), axis=0).to_dict(),
+                                     index=['entropy'])
+        return pd.concat([df, ctags_df, ctags_entropy], axis=0)
+
+    def save_statistics_for_all_dict(self, file_prefix):
+        for dic_name, dic in [('word_ctag', self.word_ctag_count), ('suffix', self.suffix_count), ('prefix', self.prefix_count),
+                              ('pptag_ptag_ctag', self.pptag_ptag_ctag_count), ('ptag_ctag', self.ptag_ctag_count),
+                              ('ctag', self.ctag_count), ('pword_ctag', self.pword_ctag_count), ('nword_ctag', self.nword_ctag_count),
+                              ('len_word', self.len_word_count), ('upper_lower_number', self.upper_lower_number_count),
+                              ('punctuation_starts', self.punctuation_starts_count ), ('punctuation', self.punctuation_count),
+                              ('num_of_uppers', self.num_of_uppers_count), ('is_number', self.is_number_count)]:
+            self.calculate_statistics_df(dic).to_csv(file_prefix + '_' + dic_name + '.csv')

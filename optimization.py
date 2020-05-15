@@ -68,8 +68,8 @@ class Optimization:
         return np.random.normal(size=k)
 
     @staticmethod
-    def optimize_weights(mat, list_of_mats, v=None):
-        opt = Optimization(mat, list_of_mats, 0.1)
+    def optimize_weights(mat, list_of_mats, v=None, lamda=10):
+        opt = Optimization(mat, list_of_mats, lamda)
         if v is None:
             v = Optimization.init_weights(mat.shape[1])
         optimal_params = fmin_l_bfgs_b(func=opt.calc_objective_per_iter, x0=v, maxiter=300, iprint=50)

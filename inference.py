@@ -83,7 +83,3 @@ class Viterbi:
         for sentence in list_of_sentences:
             list_of_tags.append(self.viterbi(sentence, 30))
         return list_of_tags
-
-
-
-

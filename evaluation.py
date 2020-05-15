@@ -19,11 +19,11 @@ def prepare_test_data(test_path):
 
 
 def prepare_comp_data(comp_path):
-    list_on_sentences = []
+    list_of_sentences = []
     with open(comp_path, 'r') as file:
         for line in file:
-            list_on_sentences.append(line)
-    return list_on_sentences
+            list_of_sentences.append(line)
+    return list_of_sentences
 
 
 def create_confusion_matrix(real_list_of_tags, pred_list_of_tags):
@@ -32,7 +32,6 @@ def create_confusion_matrix(real_list_of_tags, pred_list_of_tags):
         for real_tag, pred_tag in zip(real_tags, pred_tags):
             confusion_matrix[real_tag][pred_tag] += 1
     print(confusion_matrix)
-    pd.DataFrame(confusion_matrix).to_csv('exp_1_confusion_matrix.csv')
     return confusion_matrix
 
 
@@ -51,7 +50,7 @@ def calculate_accuracy(real_list_of_tags, pred_list_of_tags):
                 accuracy += confusion_matrix[real_tag][real_tag]
                 accuracy_real_tag += confusion_matrix[real_tag][real_tag]
         accuracies[real_tag] = accuracy_real_tag / sum_real_tag
-    return accuracy / sum, accuracies
+    return accuracy / sum, accuracies, confusion_matrix
 
 
 
