@@ -69,10 +69,10 @@ class Optimization:
 
     @staticmethod
     def optimize_weights(mat, list_of_mats, v=None):
-        opt = Optimization(mat, list_of_mats, 10)
+        opt = Optimization(mat, list_of_mats, 0.1)
         if v is None:
             v = Optimization.init_weights(mat.shape[1])
-        optimal_params = fmin_l_bfgs_b(func=opt.calc_objective_per_iter, x0=v, maxiter=150, iprint=50)
+        optimal_params = fmin_l_bfgs_b(func=opt.calc_objective_per_iter, x0=v, maxiter=300, iprint=50)
         return optimal_params[0], optimal_params[1]
 
 

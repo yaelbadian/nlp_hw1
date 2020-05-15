@@ -169,18 +169,19 @@ past_participle = {'bred', 'proven', 'backslidden', 'forborne', 'premade', 'over
                    'outstood', 'had', 'misunderstood', 'overlain'}
 
 experiments = {
-    'exp_1': {'word_ctag': 1,
-              'suffix': 1,
-              'prefix': 1,
-              'pptag_ptag_ctag': 5,
-              'ptag_ctag': 3,
-              'ctag': 1,
-              'pword_ctag': 3,
-              'nword_ctag': 3,
+    'exp_4_lambda_0.1': {'word_ctag': 5,
+              'suffix': 0,
+              'prefix': 0,
+              'pptag_ptag_ctag': 10,
+              'ptag_ctag': 10,
+              'ctag': 0,
+              'pword_ctag': 5,
+              'nword_ctag': 5,
               'len_word': 1,
               'upper_lower_number': 1,
               'punctuation_starts': 1,
               'punctuation': 1,
               'num_of_uppers': 1,
               'is_number': 1,
-              'irregular_verb': 1}}
+              'irregular_verb': 1}
+    }

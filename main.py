@@ -6,6 +6,7 @@ from inference import Viterbi
 import pickle
 import evaluation
 from macros import experiments
+import random
 
 
 def print_features_and_weights(weights, features):
@@ -31,11 +32,11 @@ def optimize(mat, list_of_mats, weights_path):
     return likelihood, weights
 
 
-def viterbi_alg(test_path, features, weights):
+def viterbi_test(test_path, features, weights):
     viterbi = Viterbi(features, weights)
-    list_on_sentences, real_list_of_tags = evaluation.prepare_test_data(test_path)
-    pred_list_of_tags = viterbi.predict_tags(list_on_sentences[:200])
-    # for i in range(200):
+    list_of_sentences, real_list_of_tags = evaluation.prepare_test_data(test_path)
+    pred_list_of_tags = viterbi.predict_tags(list_of_sentences)
+    # for i in range(20):
     #     print("SENTENCE", i)
     #     print(list_on_sentences[i])
     #     for word, t1, t2 in zip(list_on_sentences[i].split(' '), real_list_of_tags[i], pred_list_of_tags[i]):
@@ -43,6 +44,39 @@ def viterbi_alg(test_path, features, weights):
     #             print(word, t1, t2)
     accuracy, accuracies = evaluation.calculate_accuracy(real_list_of_tags, pred_list_of_tags)
     return accuracy, accuracies
+
+
+def viterbi_comp(comp_path, features, weights, output_path):
+    list_of_sentences = evaluation.prepare_comp_data(comp_path)
+    viterbi = Viterbi(features, weights)
+    pred_list_of_tags = viterbi.predict_tags(list_of_sentences)
+    with open(output_path, "w") as file:
+        for i in range(len(list_of_sentences)):
+            sentence = ''
+            for word, tag in zip(list_of_sentences[i].split(' '), pred_list_of_tags[i]):
+                sentence += word + '_' + tag
+            file.write(sentence + '\n')
+
+
+def split_train_test(list_of_sentences, list_of_tags, test_size):
+    n = len(list_of_sentences)
+    indices = random.sample(list(range(n)), int(n*test_size))
+    train_sentences, test_sentences, train_tags, test_tags = [], [], [], []
+    for i in range(n):
+        if i in indices:
+            test_sentences.append(list_of_sentences[i])
+            test_tags.append(list_of_tags[i])
+        else:
+            train_sentences.append(list_of_sentences[i])
+            train_tags.append(list_of_tags[i])
+    return train_sentences, test_sentences, train_tags, test_tags
+
+
+
+
+
+list_on_sentences, list_of_tags = evaluation.prepare_test_data(test_path)
+train_sentences, test_sentences, train_tags, test_tags = split_train_test(list_of_sentences, list_of_tags, test_size)
 
 
 if __name__ == '__main__':
@@ -53,7 +87,7 @@ if __name__ == '__main__':
         weights_path = 'experiments/' + experiment + '_weights.pkl'
         features, mat, list_of_mats = create_features(thresholds, file_path, features_path)
         likelihood, weights = optimize(mat, list_of_mats, weights_path)
-        accuracy, accuracies = viterbi_alg(test_path, features, weights)
+        accuracy, accuracies = viterbi_test(test_path, features, weights)
         print("results for experiment: {}, likelihood: {}, accuracy: {}".format(experiment, likelihood, accuracy))
         print(accuracies)
         with open('experiments/results.txt', 'a') as file:
@@ -66,7 +100,7 @@ if __name__ == '__main__':
     #     weights = pickle.load(file)
     #
     # viterbi_alg(test_path, features, weights)
-
+    #
 
 
 

@@ -4,7 +4,7 @@ import pandas as pd
 from collections import defaultdict
 
 def prepare_test_data(test_path):
-    list_on_sentences = []
+    list_of_sentences = []
     list_of_tags = []
     with open(test_path, 'r') as file:
         for line in file:
@@ -13,9 +13,9 @@ def prepare_test_data(test_path):
             for word in line.split(' '):
                 sentence += word.split('_')[0] + ' '
                 tags.append(word.split('_')[1].rstrip())
-            list_on_sentences.append(sentence.rstrip())
+            list_of_sentences.append(sentence.rstrip())
             list_of_tags.append(tags)
-    return list_on_sentences, list_of_tags
+    return list_of_sentences, list_of_tags
 
 
 def prepare_comp_data(comp_path):
