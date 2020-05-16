@@ -6,6 +6,7 @@ import pandas as pd
 import evaluation
 from macros import experiments
 import random
+from time import time
 
 
 def print_features_and_weights(weights, features):
@@ -24,7 +25,7 @@ def create_features(thresholds, file_path, features_path):
     return features, mat, list_of_mats
 
 
-def optimize(mat, list_of_mats, weights_path, lamda=10):
+def optimize(mat, list_of_mats, weights_path, lamda=0.5):
     weights, likelihood = Optimization.optimize_weights(mat, list_of_mats, lamda=lamda)
     with open(weights_path, 'wb') as f:
         pickle.dump(weights, f)
@@ -35,12 +36,12 @@ def viterbi_test(test_path, features, weights):
     viterbi = Viterbi(features, weights)
     list_of_sentences, real_list_of_tags = evaluation.prepare_test_data(test_path)
     pred_list_of_tags = viterbi.predict_tags(list_of_sentences)
-    for i in range(len(pred_list_of_tags)):
-        print("SENTENCE", i)
-        print(list_of_sentences[i])
-        for word, t1, t2 in zip(list_of_sentences[i].split(' '), real_list_of_tags[i], pred_list_of_tags[i]):
-            if t1 != t2:
-                print(word, t1, t2)
+    # for i in range(len(pred_list_of_tags)):
+    #     print("SENTENCE", i)
+    #     print(list_of_sentences[i])
+    #     for word, t1, t2 in zip(list_of_sentences[i].split(' '), real_list_of_tags[i], pred_list_of_tags[i]):
+    #         if t1 != t2:
+    #             print(word, t1, t2)
     accuracy, accuracies, confusion_matrix = evaluation.calculate_accuracy(real_list_of_tags, pred_list_of_tags)
     return accuracy, accuracies, confusion_matrix
 
@@ -67,22 +68,7 @@ def train_test_split(data_path, test_size, train_output_path, test_output_path, 
     open(test_output_path, 'w').writelines(test_lines)
 
 
-def split_train_test(list_of_sentences, list_of_tags, test_size):
-    n = len(list_of_sentences)
-    indices = random.sample(list(range(n)), int(n*test_size))
-    train_sentences, test_sentences, train_tags, test_tags = [], [], [], []
-    for i in range(n):
-        if i in indices:
-            test_sentences.append(list_of_sentences[i])
-            test_tags.append(list_of_tags[i])
-        else:
-            train_sentences.append(list_of_sentences[i])
-            train_tags.append(list_of_tags[i])
-    return train_sentences, test_sentences, train_tags, test_tags
-
-
-if __name__ == '__main__':
-    model_i = 2
+def main_train(model_i):
     if model_i == 1:
         train_path = "data/train1.wtag"
         test_path = "data/test1.wtag"
@@ -94,11 +80,58 @@ if __name__ == '__main__':
     for experiment, thresholds in experiments.items():
         features_path = 'experiments/' + experiment + f'_features{model_i}.pkl'
         weights_path = 'experiments/' + experiment + f'_weights{model_i}.pkl'
+        t0 = time()
         features, mat, list_of_mats = create_features(thresholds, train_path, features_path)
+        pretraining_time = time()
         likelihood, weights = optimize(mat, list_of_mats, weights_path, thresholds['lamda'])
+        optimization_time = time()
         accuracy, accuracies, confusion_matrix = viterbi_test(test_path, features, weights)
-        pd.DataFrame(confusion_matrix).to_csv('experiments/' + experiment + f'_confusion_matrix{model_i}.pkl')
+        features_importance = pd.DataFrame(features.features_importance(weights))
+        features_importance.to_csv('experiments/' + experiment + f'_features_importance{model_i}.csv', index=False)
+        inference_time = time()
+        confusion_matrix = pd.DataFrame(confusion_matrix).T.fillna(0)
+        confusion_matrix.to_csv('experiments/' + experiment + f'_confusion_matrix{model_i}.csv')
+        print(experiment)
+        print('\tPretraining time:', pretraining_time - t0)
+        print('\tOptimization time:', optimization_time - pretraining_time)
+        print('\tTotal training time:', optimization_time - t0)
+        print('\tInference time:', inference_time - optimization_time)
+        print('\tTotal Features:', len(weights))
+        print('\tFeatures Sizes:', features.size_of_features())
+        print('\tTest Accuracy:', accuracy)
+        print(confusion_matrix.head(10))
+        print(features_importance.head(20))
         print("Model:{} results for experiment: {}, likelihood: {}, accuracy: {}".format(model_i, experiment, likelihood, accuracy))
         print(accuracies)
         with open('experiments/results.txt', 'a') as file:
             file.write("Model:{} results for experiment: {}, likelihood: {}, accuracy: {}\n".format(model_i, experiment, likelihood, accuracy))
+
+def main_test(model_i, experiment):
+    if model_i == 1:
+        train_path = "data/train1.wtag"
+        test_path = "data/test1.wtag"
+    else:
+        train_path = f"data/train2_{model_i}.wtag"
+        test_path = f"data/test2_{model_i}.wtag"
+    features_path = 'experiments/' + experiment + f'_features{model_i}.pkl'
+    weights_path = 'experiments/' + experiment + f'_weights{model_i}.pkl'
+    t0 = time()
+    features = Features.load(features_path)
+    with open(weights_path, 'rb') as file:
+        weights = pickle.load(file)
+    train_accuracy, _, _ = viterbi_test(train_path, features, weights)
+    train_inference_time = time() - t0
+    test_accuracy, _, _ = viterbi_test(test_path, features, weights)
+    test_inference_time = time() - train_inference_time
+    print('\tTrain Inference time:', train_inference_time)
+    print('\tTest Inference time:', test_inference_time)
+    print('\tTotal Features:', len(weights))
+    print('\tFeatures Sizes:', features.size_of_features())
+    print('\tTrain Accuracy:', train_accuracy)
+    print('\tTest Accuracy:', test_accuracy)
+
+
+if __name__ == '__main__':
+    model_i = 1
+    experiment = 'exp_2'
+    main_test(model_i, experiment)

@@ -1,12 +1,11 @@
 import numpy as np
-import scipy
-from scipy.sparse import csr_matrix
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 class Viterbi:
-    def __init__(self, features, weights):
+    def __init__(self, features, weights, beam=30):
         self.features = features
         self.weights = weights
+        self.beam = beam
         self.qs = {}
         self.denominators = {}
 
@@ -66,7 +65,6 @@ class Viterbi:
             for pi_score, pi_bp, pi_v, pi_u in sorted(all_scores, key=lambda x: x[0], reverse=True)[:b]:
                 pi[i][pi_v][pi_u] = pi_score
                 bp[i][pi_v][pi_u] = pi_bp
-                # print("word:", sentence[i], "i:", i, "u:", pi_u, "v:", pi_v, "t:", bp[i][pi_v][pi_u], "pi:", pi[i][pi_v][pi_u])
         score = 0
         for v in pi[n].keys():
             for u in pi[n][v].keys():
@@ -80,6 +78,6 @@ class Viterbi:
 
     def predict_tags(self, list_of_sentences):
         list_of_tags = []
-        for sentence in list_of_sentences:
-            list_of_tags.append(self.viterbi(sentence, 30))
+        for i, sentence in enumerate(list_of_sentences):
+            list_of_tags.append(self.viterbi(sentence, self.beam))
         return list_of_tags

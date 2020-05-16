@@ -3,8 +3,8 @@ from scipy.sparse import csr_matrix
 import pickle
 from macros import pucts, numbers, prefixes, suffixes, simple_past, past_participle
 
-class Features:
 
+class Features:
     def __init__(self, file_path, thresholds):
         self.thresholds = thresholds
         self.n_total_features = 0  # Total number of features accumulated
@@ -29,12 +29,12 @@ class Features:
         self.nword_ctag_count = OrderedDict()  # feature 107
 
         self.len_word_count = OrderedDict()  # length of the word
-        self.upper_lower_number_count = OrderedDict()  # (1) starts with 0-Upper 1-Lower 2-number (2) have uppers (3) have lowers (4) have numbers
-        self.punctuation_starts_count = OrderedDict()  # (1) punc (2) starts with 0-Upper 1-Lower 2-number (3) after punc starts with 0-Upper 1-Lower 2-number
+        self.upper_lower_number_count = OrderedDict()   # (1) starts with 0-Upper 1-Lower 2-number (2) have uppers (3) have lowers (4) have numbers
+        self.punctuation_starts_count = OrderedDict()   # (1) punc (2) starts with 0-Upper 1-Lower 2-number (3) after punc starts with 0-Upper 1-Lower 2-number
         self.punctuation_count = OrderedDict()  # (1) punc (2) have uppers (3) have lowers (4) have numbers
         self.num_of_uppers_count = OrderedDict()  # numbers of uppers
-        self.is_number_count = OrderedDict() # True if word is number, else False
-        self.irregular_verb_count = OrderedDict() # irregular verbs
+        self.is_number_count = OrderedDict()  # True if word is number, else False
+        self.irregular_verb_count = OrderedDict()  # irregular verbs
         self.idx_to_feature = {}
         self.create_all_dicts()
 
@@ -63,11 +63,11 @@ class Features:
         return has_upper, has_lower, has_number
 
     @staticmethod
-    def add_key_to_dict(key, dict):
-        if key in dict:
-            dict[key] += 1
+    def add_key_to_dict(key, dic):
+        if key in dic:
+            dic[key] += 1
         else:
-            dict[key] = 1
+            dic[key] = 1
 
     def fill_word_ctag_count(self, word, ctag, fill=True):
         key = (word.lower(), ctag)
@@ -250,7 +250,7 @@ class Features:
         is_number = True
         if word[0] == '-':
             word = word[1:]
-        word = word.replace('.', '').replace(',', '')
+        word = word.replace('.', '').replace(',', '').replace('/', '')
         for c in word:
             if self.map_char(c) != 2:
                 is_number = False
@@ -319,8 +319,10 @@ class Features:
         self.pword_ctag = self.create_idx_dict(self.pword_ctag_count, self.thresholds['pword_ctag'])
         self.nword_ctag = self.create_idx_dict(self.nword_ctag_count, self.thresholds['nword_ctag'])
         self.len_word = self.create_idx_dict(self.len_word_count, self.thresholds['len_word'])
-        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count, self.thresholds['upper_lower_number'])
-        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count, self.thresholds['punctuation_starts'])
+        self.upper_lower_number = self.create_idx_dict(self.upper_lower_number_count,
+                                                       self.thresholds['upper_lower_number'])
+        self.punctuation_starts = self.create_idx_dict(self.punctuation_starts_count,
+                                                       self.thresholds['punctuation_starts'])
         self.punctuation = self.create_idx_dict(self.punctuation_count, self.thresholds['punctuation'])
         self.num_of_uppers = self.create_idx_dict(self.num_of_uppers_count, self.thresholds['num_of_uppers'])
         self.is_number = self.create_idx_dict(self.is_number_count, self.thresholds['is_number'])
@@ -331,9 +333,9 @@ class Features:
         splitted_line = line.rstrip('\n').split(' ')
         list_of_histories = []
         list_of_tuples = [['*', '*'], ['*', '*']] + [x.split('_') for x in splitted_line] + [['STOP', 'STOP']]
-        for i in range(2, len(list_of_tuples)-1):
-            list_of_histories.append([list_of_tuples[i][0], list_of_tuples[i-2][1], list_of_tuples[i-1][1],
-                                      list_of_tuples[i][1], list_of_tuples[i+1][0], list_of_tuples[i-1][0]])
+        for i in range(2, len(list_of_tuples) - 1):
+            list_of_histories.append([list_of_tuples[i][0], list_of_tuples[i - 2][1], list_of_tuples[i - 1][1],
+                                      list_of_tuples[i][1], list_of_tuples[i + 1][0], list_of_tuples[i - 1][0]])
         return list_of_histories
 
     def represent_input_with_features(self, history):
@@ -344,7 +346,7 @@ class Features:
         features += self.fill_nword_ctag_count(nword, ctag, fill=False)
         features += self.fill_len_word_count(word, ctag, fill=False)
         features += self.fill_is_number_count(word, ctag, fill=False)
-        if len(word) > 1:  ########## think about punctuation ############
+        if len(word) > 1:
             features += self.fill_suffix_count(word, ctag, fill=False)
             features += self.fill_prefix_count(word, ctag, fill=False)
             features += self.fill_pptag_ptag_ctag_count(pptag, ptag, ctag, fill=False)
@@ -366,11 +368,6 @@ class Features:
         return list_of_lines_histories
 
     def create_all_dicts(self):
-        """
-            Extract out of text all word/tag pairs
-            :param file_path: full path of the file to read
-                return all word/tag pairs with index of appearance
-        """
         for line_histories in self.list_of_lines_histories:
             for history in line_histories:
                 self.n_total_histories += 1
@@ -448,10 +445,42 @@ class Features:
         return pd.concat([df, ctags_df, ctags_entropy], axis=0)
 
     def save_statistics_for_all_dict(self, file_prefix):
-        for dic_name, dic in [('word_ctag', self.word_ctag_count), ('suffix', self.suffix_count), ('prefix', self.prefix_count),
+        for dic_name, dic in [('word_ctag', self.word_ctag_count), ('suffix', self.suffix_count),
+                              ('prefix', self.prefix_count),
                               ('pptag_ptag_ctag', self.pptag_ptag_ctag_count), ('ptag_ctag', self.ptag_ctag_count),
-                              ('ctag', self.ctag_count), ('pword_ctag', self.pword_ctag_count), ('nword_ctag', self.nword_ctag_count),
+                              ('ctag', self.ctag_count), ('pword_ctag', self.pword_ctag_count),
+                              ('nword_ctag', self.nword_ctag_count),
                               ('len_word', self.len_word_count), ('upper_lower_number', self.upper_lower_number_count),
-                              ('punctuation_starts', self.punctuation_starts_count ), ('punctuation', self.punctuation_count),
+                              ('punctuation_starts', self.punctuation_starts_count),
+                              ('punctuation', self.punctuation_count),
                               ('num_of_uppers', self.num_of_uppers_count), ('is_number', self.is_number_count)]:
             self.calculate_statistics_df(dic).to_csv(file_prefix + '_' + dic_name + '.csv')
+
+    def features_importance(self, weights):
+        indices = list(range(len(weights)))
+        features = [self.idx_to_feature[i] for i in indices]
+        rank = 1
+        rows = []
+        for i, f, w in sorted(list(zip(indices, features, weights)), key=lambda x: abs(x[2]), reverse=True):
+            if type(f) == tuple:
+                ctag = f[-1]
+            else:
+                ctag = f
+            rows.append({'rank': rank, 'feature': f, 'ctag': ctag, 'weight': w, 'importance': abs(w)})
+            rank += 1
+        return rows
+
+    def size_of_features(self):
+        sizes = {}
+        for dic_name, dic in [('word_ctag', self.word_ctag), ('suffix', self.suffix),
+                              ('prefix', self.prefix),
+                              ('pptag_ptag_ctag', self.pptag_ptag_ctag), ('ptag_ctag', self.ptag_ctag),
+                              ('ctag', self.ctag), ('pword_ctag', self.pword_ctag),
+                              ('nword_ctag', self.nword_ctag),
+                              ('len_word', self.len_word_count), ('upper_lower_number', self.upper_lower_number),
+                              ('punctuation_starts', self.punctuation_starts),
+                              ('punctuation', self.punctuation),
+                              ('num_of_uppers', self.num_of_uppers), ('is_number', self.is_number),
+                              ('irregular_verb', self.irregular_verb)]:
+            sizes['dic_name'] = len(dic)
+        return sizes

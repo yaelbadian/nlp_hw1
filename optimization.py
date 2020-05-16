@@ -1,9 +1,6 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.optimize import fmin_l_bfgs_b
-from multiprocessing import Pool
-import os
-import itertools
 
 
 class Optimization:
@@ -40,7 +37,7 @@ class Optimization:
     def calculate_empirical_counts(self):
         return self.mat.sum(axis=0)
 
-    def calculate_expected_counts(self, exps, sum_of_exps):  ################## deal with divide by zero ##################
+    def calculate_expected_counts(self, exps, sum_of_exps):
         sum_of_mats = csr_matrix(np.zeros(self.mat.shape)).T
         for mat, exp in zip(self.list_of_mats, exps):
             sum_of_mats += csr_matrix.multiply(mat.T, exp)
@@ -72,7 +69,5 @@ class Optimization:
         opt = Optimization(mat, list_of_mats, lamda)
         if v is None:
             v = Optimization.init_weights(mat.shape[1])
-        optimal_params = fmin_l_bfgs_b(func=opt.calc_objective_per_iter, x0=v, maxiter=300, iprint=50)
+        optimal_params = fmin_l_bfgs_b(func=opt.calc_objective_per_iter, x0=v, maxiter=200, iprint=50)
         return optimal_params[0], optimal_params[1]
-
-
