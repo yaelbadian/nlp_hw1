@@ -79,5 +79,7 @@ class Viterbi:
     def predict_tags(self, list_of_sentences):
         list_of_tags = []
         for i, sentence in enumerate(list_of_sentences):
+            if i % 100 and i > 0:
+                print('predicting sentence: ', i)
             list_of_tags.append(self.viterbi(sentence, self.beam))
         return list_of_tags
