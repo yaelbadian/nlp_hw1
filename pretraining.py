@@ -417,32 +417,32 @@ class Features:
         with open(fname, 'rb') as file:
             return pickle.load(file)
 
-    @staticmethod
-    def calculate_statistics_df(dic):
-        import numpy as np
-        import pandas as pd
-        rows = defaultdict(lambda: defaultdict(int))
-        ctag_rows = defaultdict(lambda: defaultdict(int))
-        for key_ctag, cnt in dic.items():
-            key, ctag = str(key_ctag[:-1]), str(key_ctag[-1])
-            rows[key][ctag] = cnt
-            ctag_rows[ctag]['nunique'] += 1
-            ctag_rows[ctag]['total'] += cnt
-        for key in rows:
-            total, entropy = 0, 0
-            for ctag in rows[key]:
-                total += rows[key][ctag]
-            for ctag in rows[key]:
-                rows[key][ctag] = rows[key][ctag] / max(1, total)
-                entropy += -rows[key][ctag] * np.log(rows[key][ctag])
-            rows[key]['nunique'] = len(rows[key])
-            rows[key]['total'] = total
-            rows[key]['entropy'] = entropy
-        df = pd.DataFrame(rows).T.fillna(0)
-        ctags_df = pd.DataFrame(ctag_rows)
-        ctags_entropy = pd.DataFrame(df.apply(lambda x: (- x * np.log(x.where(x > 0, 1))).sum(), axis=0).to_dict(),
-                                     index=['entropy'])
-        return pd.concat([df, ctags_df, ctags_entropy], axis=0)
+    # @staticmethod
+    # def calculate_statistics_df(dic):
+    #     import numpy as np
+    #     import pandas as pd
+    #     rows = defaultdict(lambda: defaultdict(int))
+    #     ctag_rows = defaultdict(lambda: defaultdict(int))
+    #     for key_ctag, cnt in dic.items():
+    #         key, ctag = str(key_ctag[:-1]), str(key_ctag[-1])
+    #         rows[key][ctag] = cnt
+    #         ctag_rows[ctag]['nunique'] += 1
+    #         ctag_rows[ctag]['total'] += cnt
+    #     for key in rows:
+    #         total, entropy = 0, 0
+    #         for ctag in rows[key]:
+    #             total += rows[key][ctag]
+    #         for ctag in rows[key]:
+    #             rows[key][ctag] = rows[key][ctag] / max(1, total)
+    #             entropy += -rows[key][ctag] * np.log(rows[key][ctag])
+    #         rows[key]['nunique'] = len(rows[key])
+    #         rows[key]['total'] = total
+    #         rows[key]['entropy'] = entropy
+    #     df = pd.DataFrame(rows).T.fillna(0)
+    #     ctags_df = pd.DataFrame(ctag_rows)
+    #     ctags_entropy = pd.DataFrame(df.apply(lambda x: (- x * np.log(x.where(x > 0, 1))).sum(), axis=0).to_dict(),
+    #                                  index=['entropy'])
+    #     return pd.concat([df, ctags_df, ctags_entropy], axis=0)
 
     def save_statistics_for_all_dict(self, file_prefix):
         for dic_name, dic in [('word_ctag', self.word_ctag_count), ('suffix', self.suffix_count),
@@ -482,5 +482,5 @@ class Features:
                               ('punctuation', self.punctuation),
                               ('num_of_uppers', self.num_of_uppers), ('is_number', self.is_number),
                               ('irregular_verb', self.irregular_verb)]:
-            sizes['dic_name'] = len(dic)
+            sizes[dic_name] = len(dic)
         return sizes

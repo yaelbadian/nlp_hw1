@@ -32,8 +32,8 @@ def optimize(mat, list_of_mats, weights_path, lamda=0.5):
     return likelihood, weights
 
 
-def viterbi_test(test_path, features, weights):
-    viterbi = Viterbi(features, weights)
+def viterbi_test(test_path, features, weights, beam=10):
+    viterbi = Viterbi(features, weights, beam=beam)
     list_of_sentences, real_list_of_tags = evaluation.prepare_test_data(test_path)
     pred_list_of_tags = viterbi.predict_tags(list_of_sentences)
     # for i in range(len(pred_list_of_tags)):
@@ -44,18 +44,6 @@ def viterbi_test(test_path, features, weights):
     #             print(word, t1, t2)
     accuracy, accuracies, confusion_matrix = evaluation.calculate_accuracy(real_list_of_tags, pred_list_of_tags)
     return accuracy, accuracies, confusion_matrix
-
-
-def viterbi_comp(comp_path, features, weights, output_path):
-    list_of_sentences = evaluation.prepare_comp_data(comp_path)
-    viterbi = Viterbi(features, weights)
-    pred_list_of_tags = viterbi.predict_tags(list_of_sentences)
-    with open(output_path, "w") as file:
-        for i in range(len(list_of_sentences)):
-            sentence = ''
-            for word, tag in zip(list_of_sentences[i].split(' '), pred_list_of_tags[i]):
-                sentence += word + '_' + tag
-            file.write(sentence + '\n')
 
 
 def train_test_split(data_path, test_size, train_output_path, test_output_path, seed=None):
@@ -73,10 +61,11 @@ def main_train(model_i):
         train_path = "data/train1.wtag"
         test_path = "data/test1.wtag"
     else:
-        data_path = "data/train2.wtag"
-        train_path = f"data/train2_{model_i}.wtag"
-        test_path = f"data/test2_{model_i}.wtag"
-        train_test_split(data_path, 0.2, train_path, test_path, seed=model_i)
+        train_path = "data/train2.wtag"
+        test_path = "data/train2.wtag"
+        # train_path = f"data/train2_{model_i}.wtag"
+        # test_path = f"data/test2_{model_i}.wtag"
+        # train_test_split(data_path, 0.2, train_path, test_path, seed=model_i)
     for experiment, thresholds in experiments.items():
         features_path = 'experiments/' + experiment + f'_features{model_i}.pkl'
         weights_path = 'experiments/' + experiment + f'_weights{model_i}.pkl'
@@ -113,20 +102,22 @@ def main_test(model_i, experiment):
     else:
         train_path = f"data/train2_{model_i}.wtag"
         test_path = f"data/test2_{model_i}.wtag"
-    features_path = 'experiments/' + experiment + f'_features{model_i}.pkl'
-    weights_path = 'experiments/' + experiment + f'_weights{model_i}.pkl'
+    features_path = 'models/' + experiment + f'_features{model_i}.pkl'
+    weights_path = 'models/' + experiment + f'_weights{model_i}.pkl'
     t0 = time()
     features = Features.load(features_path)
     with open(weights_path, 'rb') as file:
         weights = pickle.load(file)
+    print('\tFeatures Sizes:', features.size_of_features())
     train_accuracy, _, _ = viterbi_test(train_path, features, weights)
     train_inference_time = time() - t0
     test_accuracy, _, _ = viterbi_test(test_path, features, weights)
     test_inference_time = time() - train_inference_time
-    print('\tTrain Inference time:', train_inference_time)
-    print('\tTest Inference time:', test_inference_time)
     print('\tTotal Features:', len(weights))
     print('\tFeatures Sizes:', features.size_of_features())
+    print('\tWeights Norm:', (weights ** 2).sum() ** 0.5)
+    print('\tTrain Inference time:', train_inference_time)
+    print('\tTest Inference time:', test_inference_time)
     print('\tTrain Accuracy:', train_accuracy)
     print('\tTest Accuracy:', test_accuracy)
 
@@ -135,3 +126,4 @@ if __name__ == '__main__':
     model_i = 1
     experiment = 'exp_2'
     main_test(model_i, experiment)
+    # main_train(model_i)

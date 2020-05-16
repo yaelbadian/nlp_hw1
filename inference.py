@@ -2,7 +2,7 @@ import numpy as np
 from collections import defaultdict
 
 class Viterbi:
-    def __init__(self, features, weights, beam=30):
+    def __init__(self, features, weights, beam=10):
         self.features = features
         self.weights = weights
         self.beam = beam
@@ -79,7 +79,7 @@ class Viterbi:
     def predict_tags(self, list_of_sentences):
         list_of_tags = []
         for i, sentence in enumerate(list_of_sentences):
-            if i % 100 and i > 0:
-                print('predicting sentence: ', i)
+            if i % 100 == 0:
+                print('Predicting sentence number', i)
             list_of_tags.append(self.viterbi(sentence, self.beam))
         return list_of_tags
