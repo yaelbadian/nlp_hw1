@@ -4,8 +4,8 @@ import pickle
 import evaluation
 
 
-features_model1 = 'models/exp_5_features.pkl'
-weights_model1 = 'models/exp_5_weights.pkl'
+features_model1 = 'models/exp_2_features1.pkl'
+weights_model1 = 'models/exp_2_weights1.pkl'
 comp_input_model1 = 'data/comp1.words'
 comp_output_model1 = 'data/comp_m1_204434161.wtag'
 features_model2 = 'models/exp_5_features2.pkl'
@@ -23,7 +23,7 @@ def viterbi_comp(comp_path, features, weights, output_path):
             sentence = ''
             for word, tag in zip(list_of_sentences[i].split(), pred_list_of_tags[i]):
                 sentence += word + '_' + tag + ' '
-            file.write(sentence + '\n')
+            file.write(sentence.rstrip() + '\n')
 
 
 if __name__ == '__main__':
@@ -33,7 +33,6 @@ if __name__ == '__main__':
     with open(weights_model1, 'rb') as file:
         weights1 = pickle.load(file)
     viterbi_comp(comp_input_model1, features1, weights1, comp_output_model1)
-    viterbi_test(comp_output_model1, features1, weights1)
     del features1
     del weights1
 
@@ -42,8 +41,5 @@ if __name__ == '__main__':
     with open(weights_model2, 'rb') as file:
         weights2 = pickle.load(file)
     viterbi_comp(comp_input_model2, features2, weights2, comp_output_model2)
-    viterbi_test(comp_output_model2, features2, weights2)
-    del features1
-    del weights1
-
-
+    del features2
+    del weights2
