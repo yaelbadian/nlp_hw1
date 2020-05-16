@@ -27,7 +27,6 @@ def viterbi_comp(comp_path, features, weights, output_path):
 
 
 if __name__ == '__main__':
-    from main import viterbi_test
     # model 1
     features1 = Features.load(features_model1)
     with open(weights_model1, 'rb') as file:
