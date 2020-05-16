@@ -2,7 +2,6 @@ from pretraining import Features
 from optimization import Optimization
 from inference import Viterbi
 import pickle
-import pandas as pd
 import evaluation
 from macros import experiments
 import random
@@ -61,11 +60,10 @@ def main_train(model_i):
         train_path = "data/train1.wtag"
         test_path = "data/test1.wtag"
     else:
-        train_path = "data/train2.wtag"
-        test_path = "data/train2.wtag"
-        # train_path = f"data/train2_{model_i}.wtag"
-        # test_path = f"data/test2_{model_i}.wtag"
-        # train_test_split(data_path, 0.2, train_path, test_path, seed=model_i)
+        data_path = "data/train2.wtag"
+        train_path = f"data/train2_{model_i}.wtag"
+        test_path = f"data/test2_{model_i}.wtag"
+        train_test_split(data_path, 0.2, train_path, test_path, seed=model_i)
     for experiment, thresholds in experiments.items():
         features_path = 'experiments/' + experiment + f'_features{model_i}.pkl'
         weights_path = 'experiments/' + experiment + f'_weights{model_i}.pkl'
@@ -75,11 +73,7 @@ def main_train(model_i):
         likelihood, weights = optimize(mat, list_of_mats, weights_path, thresholds['lamda'])
         optimization_time = time()
         accuracy, accuracies, confusion_matrix = viterbi_test(test_path, features, weights)
-        features_importance = pd.DataFrame(features.features_importance(weights))
-        features_importance.to_csv('experiments/' + experiment + f'_features_importance{model_i}.csv', index=False)
         inference_time = time()
-        confusion_matrix = pd.DataFrame(confusion_matrix).T.fillna(0)
-        confusion_matrix.to_csv('experiments/' + experiment + f'_confusion_matrix{model_i}.csv')
         print(experiment)
         print('\tPretraining time:', pretraining_time - t0)
         print('\tOptimization time:', optimization_time - pretraining_time)
@@ -88,8 +82,6 @@ def main_train(model_i):
         print('\tTotal Features:', len(weights))
         print('\tFeatures Sizes:', features.size_of_features())
         print('\tTest Accuracy:', accuracy)
-        print(confusion_matrix.head(10))
-        print(features_importance.head(20))
         print("Model:{} results for experiment: {}, likelihood: {}, accuracy: {}".format(model_i, experiment, likelihood, accuracy))
         print(accuracies)
         with open('experiments/results.txt', 'a') as file:
@@ -108,22 +100,22 @@ def main_test(model_i, experiment):
     features = Features.load(features_path)
     with open(weights_path, 'rb') as file:
         weights = pickle.load(file)
-    print('\tFeatures Sizes:', features.size_of_features())
     train_accuracy, _, _ = viterbi_test(train_path, features, weights)
-    train_inference_time = time() - t0
+    train_inference_time = time()
     test_accuracy, _, _ = viterbi_test(test_path, features, weights)
-    test_inference_time = time() - train_inference_time
+    test_inference_time = time()
     print('\tTotal Features:', len(weights))
     print('\tFeatures Sizes:', features.size_of_features())
     print('\tWeights Norm:', (weights ** 2).sum() ** 0.5)
-    print('\tTrain Inference time:', train_inference_time)
-    print('\tTest Inference time:', test_inference_time)
+    print('\tTrain Inference time:', train_inference_time - t0)
+    print('\tTest Inference time:', test_inference_time - train_inference_time)
     print('\tTrain Accuracy:', train_accuracy)
     print('\tTest Accuracy:', test_accuracy)
 
 
 if __name__ == '__main__':
-    model_i = 1
-    experiment = 'exp_2'
-    main_test(model_i, experiment)
+    pass
+    # model_i = 2
+    # experiment = 'exp_2'
+    # main_test(model_i, experiment)
     # main_train(model_i)

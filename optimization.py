@@ -57,7 +57,7 @@ class Optimization:
         regularization_grad = self.calculate_regularization_grad(v)
         likelihood = linear_term - normalization_term - regularization_term
         grad = empirical_counts - expected_counts - regularization_grad
-        print('likelihood:', likelihood, 'norm grad', np.linalg.norm(grad))
+        # print('likelihood:', likelihood, 'norm grad', np.linalg.norm(grad))
         return (-1) * likelihood, (-1) * grad
 
     @staticmethod

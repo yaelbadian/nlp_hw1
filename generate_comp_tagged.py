@@ -15,7 +15,7 @@ comp_output_model2 = 'comp_m2_204434161.wtag'
 
 
 def viterbi_comp(comp_path, features, weights, output_path):
-    list_of_sentences = evaluation.prepare_comp_data(comp_path)[:10]
+    list_of_sentences = evaluation.prepare_comp_data(comp_path)
     viterbi = Viterbi(features, weights)
     pred_list_of_tags = viterbi.predict_tags(list_of_sentences)
     with open(output_path, "w") as file:
