@@ -1,4 +1,4 @@
-from collections import OrderedDict, Counter, defaultdict
+from collections import OrderedDict, Counter
 from scipy.sparse import csr_matrix
 import pickle
 from macros import pucts, numbers, prefixes, suffixes, simple_past, past_participle

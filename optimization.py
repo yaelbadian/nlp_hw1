@@ -69,5 +69,5 @@ class Optimization:
         opt = Optimization(mat, list_of_mats, lamda)
         if v is None:
             v = Optimization.init_weights(mat.shape[1])
-        optimal_params = fmin_l_bfgs_b(func=opt.calc_objective_per_iter, x0=v, maxiter=200, iprint=50)
+        optimal_params = fmin_l_bfgs_b(func=opt.calc_objective_per_iter, x0=v, maxiter=250, iprint=50)
         return optimal_params[0], optimal_params[1]

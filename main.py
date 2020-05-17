@@ -55,10 +55,33 @@ def train_test_split(data_path, test_size, train_output_path, test_output_path, 
     open(test_output_path, 'w').writelines(test_lines)
 
 
+def concat_train_test(train_path, test_path, output_path):
+    filenames = [train_path, test_path]
+    with open(output_path, 'w') as outfile:
+        for fname in filenames:
+            with open(fname) as infile:
+                for line in infile:
+                    outfile.write(line)
+
 def main_train(model_i):
+    """
+    :param model_i: 1 for training model 1, '1all' for training model 1 on all the data (train1 + test1)
+     '2all' for training model 2 on all train2.
+     any other number - splitting train2 into train, test then train and test model2 on that data
+    :return:
+    """
     if model_i == 1:
         train_path = "data/train1.wtag"
         test_path = "data/test1.wtag"
+    elif model_i == '1all':
+        train_path = "data/train1.wtag"
+        test_path = "data/test1.wtag"
+        output_path = "data/train1all.wtag"
+        concat_train_test(train_path, test_path, output_path)
+        train_path = output_path
+    elif model_i == '2all':
+        train_path = f"data/train2.wtag"
+        test_path = f"data/train2.wtag"
     else:
         data_path = "data/train2.wtag"
         train_path = f"data/train2_{model_i}.wtag"
@@ -87,15 +110,19 @@ def main_train(model_i):
         with open('experiments/results.txt', 'a') as file:
             file.write("Model:{} results for experiment: {}, likelihood: {}, accuracy: {}\n".format(model_i, experiment, likelihood, accuracy))
 
+
 def main_test(model_i, experiment):
-    if model_i == 1:
+    if model_i == 1 or model_i == '1all':
         train_path = "data/train1.wtag"
         test_path = "data/test1.wtag"
+    elif model_i == '2all':
+        train_path = f"data/train2.wtag"
+        test_path = f"data/train2.wtag"
     else:
         train_path = f"data/train2_{model_i}.wtag"
         test_path = f"data/test2_{model_i}.wtag"
-    features_path = 'models/' + experiment + f'_features{model_i}.pkl'
-    weights_path = 'models/' + experiment + f'_weights{model_i}.pkl'
+    features_path = 'experiments/' + experiment + f'_features{model_i}.pkl'
+    weights_path = 'experiments/' + experiment + f'_weights{model_i}.pkl'
     t0 = time()
     features = Features.load(features_path)
     with open(weights_path, 'rb') as file:
@@ -115,7 +142,7 @@ def main_test(model_i, experiment):
 
 if __name__ == '__main__':
     pass
-    # model_i = 2
     # experiment = 'exp_2'
-    # main_test(model_i, experiment)
-    # main_train(model_i)
+    # for model_i in ['1all', '2all']:
+    #     main_test(model_i, experiment)
+    #     main_train(model_i)

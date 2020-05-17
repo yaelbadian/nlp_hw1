@@ -4,12 +4,12 @@ import pickle
 import evaluation
 
 
-features_model1 = 'models/exp_2_features1.pkl'
-weights_model1 = 'models/exp_2_weights1.pkl'
+features_model1 = 'models/exp_2_features1all.pkl'
+weights_model1 = 'models/exp_2_weights1all.pkl'
 comp_input_model1 = 'data/comp1.words'
 comp_output_model1 = 'comp_m1_204434161.wtag'
-features_model2 = 'models/exp_2_features2.pkl'
-weights_model2 = 'models/exp_2_weights2.pkl'
+features_model2 = 'models/exp_2_features2all.pkl'
+weights_model2 = 'models/exp_2_weights2all.pkl'
 comp_input_model2 = 'data/comp2.words'
 comp_output_model2 = 'comp_m2_204434161.wtag'
 
